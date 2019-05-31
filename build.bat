@@ -1,9 +1,11 @@
+﻿
+
 chcp 65001
 SETLOCAL ENABLEDELAYEDEXPANSION
 echo off
 
 ::编译器路径
-SET BinPath=..\..\Bin\
+SET BinPath=D:\51_mcu_mini_compiler\BIN\
 ::工程名
 SET ProjectName=test
 ::工程路径
@@ -44,4 +46,5 @@ del *.lnp
 del *.lst
 @echo [编译结束]
 @type 编译过程中产生的错误或警告.txt
+@echo on
 pause
