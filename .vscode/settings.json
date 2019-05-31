@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "stc15f2k60s2.h": "c",
+        "hyperterminal.h": "c",
+        "HYPERTERMINAL.C": "cpp",
+        "uart.h": "c",
+        "COMMANDS.C": "cpp",
+        "HELPER.C": "cpp",
+        "TERMINAL.C": "cpp"
+    }
+}
