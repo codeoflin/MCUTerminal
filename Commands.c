@@ -4,13 +4,13 @@ char Argc;
 char **Argv;
 
 const COMMAND code CommandList[] = {
-	{"help",Help,"","-- 帮助文档"},
-	{"prompt",Prompt,"","<string> -- 修改属性"},
-	{"clear",Clear,"","-- 清屏"},
-	{"reboot",Reboot,"","-- 重启"},
-	{"SetBit",SetBit,"","<BankID> <PinID> -- 设置制定IO口为1"},
-	{"ResetBit",ResetBit,"","<BankID> <PinID> -- 重置制定IO口为0"},
-	{"GetBit",GetBit,"","<BankID> <PinID> -- 读取IO口状态"},
+	{"help",Help,"","帮助文档"},
+	{"prompt",Prompt,"<string>","修改属性"},
+	{"clear",Clear,"","清屏"},
+	{"reboot",Reboot,"","重启"},
+	{"setbit",SetBit,"<BankID> <PinID>","设置制定IO口为1"},
+	{"resetbit",ResetBit,"<BankID> <PinID>","重置制定IO口为0"},
+	{"getbit",GetBit,"<BankID> <PinID>","读取IO口状态"},
 	{NULL,NULL,NULL,NULL}
 };
 /*****************************************************************************/
@@ -156,14 +156,16 @@ void Help()
 			SendStr(" ");
 			SendStr2(CommandList[i].CommandName,F_RED,B_BLACK);
 			SendStr(" ");
+			SendStr2(CommandList[i].Metadata,F_GREEN,B_BLACK);
+			SendStr2(" -- ",F_YELLOW,B_BLACK);
 			SendStr2(CommandList[i].HelpString,F_YELLOW,B_BLACK);
 			SendStr("\r\n");
 		}
 		SendStr("\r\n");
 		break;
 	default:
-		SendStr(" Invalid 'help' command: too many arguments\r\n");
-		SendStr(" Usage:\r\n");
+		SendStr(" 无效的操作: 参数过多\r\n");
+		SendStr(" 例子:\r\n");
 		SendStr("     help\r\n");
 		break;
 	}

@@ -12,8 +12,8 @@ char idata VTControlMode;/* VT控制模式 */
 /*****************************************************************************/
 void InitTerminal(void)
 {
-	int i;
-	for(i = 0; CommandList[i].CommandName!=NULL; i++)toLower(CommandList[i].CommandName);
+	//int i;
+	//for(i = 0; CommandList[i].CommandName!=NULL; i++)toLower(CommandList[i].CommandName);
 	CursorPosion = 0;
 	ExecCommandFlag = 0;
 	VTControlMode = 0;
@@ -23,10 +23,10 @@ void InitTerminal(void)
 	SendStr(DEFAULT_B_Color);
 	SendStr(CLEARSCREEN);
 	SendStr(CURSORHOME);
-	SendStr("*****************************\r\n");
-	SendStr2("     Linz Terminal System    \r\n",F_RED,B_BLACK);
-	SendStr2("        林子51终端系统       \r\n",F_BLUE,B_BLACK);
-	SendStr("*****************************\r\n");
+	SendLine("*****************************");
+	SendLine2("     Linz Terminal System    ",F_RED,B_BLACK);
+	SendLine2("        林子51终端系统       ",F_BLUE,B_BLACK);
+	SendLine("*****************************");
 	SendStr("\r\n");
 	SendStr2(&PromptBuffer[0],PROMPT_F_Color,B_BLACK);
 }
@@ -154,7 +154,6 @@ void VTInput(unsigned char sbuftemp)
 				SendByte(0x08);
 			}
 			SerialBuffer[CursorPosion] = '\0';
-			//SendStr("delete!");
 			if(argc>=1)
 			{
 				//SendUInt(argv[0]);
@@ -176,7 +175,6 @@ void CharacterInput(unsigned char sbuftemp)
 	{
 		
 	case 0x1B://ESC
-		//SendStr("Enter VTMode\r\n");
 		VTControlMode=1;
 		break;
 	case 0x08://删除
@@ -312,19 +310,23 @@ void ExecCommand(char *buf)
 		memset(argv,0,sizeof(argv));
 		ParseArgs(buf, &argc, argv, &resid);
 		toLower(argv[0]);
+		//SendLine(argv[0]);
+
 		if(argc > 0)
 		{
-			for(i = 0; CommandList[i].HelpString!=NULL; i++)
+			for(i = 0; CommandList[i].CommandName!=NULL; i++)
 			{
 				Command = &CommandList[i];
+				//SendLine(Command->CommandName);
 				if(strncmp(Command->CommandName,argv[0],strlen(argv[0])) == 0)break;
 				Command = 0;
 			}
 			if(Command == 0)
 			{
+				SendStr("'");
 				SendStr2(argv[0],F_RED,B_BLACK);
-				SendStr(" 不是内部或外部命令，也不是可运行的程序.如果需要帮助请输入");
-				SendStr2("'help'\r\n\r\n",F_YELLOW,B_BLACK); 
+				SendStr("' 不是内部或外部命令，也不是可运行的程序.如果需要帮助请输入");
+				SendLine2("'help'\r\n",F_YELLOW,B_BLACK); 
 		   	}
 			else
 			{

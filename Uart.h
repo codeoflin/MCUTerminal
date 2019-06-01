@@ -8,7 +8,8 @@ void SendStr2(char *str,char *fcolor,char *bcolor);
 void SendHexByte(unsigned char dat);
 void SendHexString(char *str,int lenght);
 void SendUInt(unsigned int number);
-
+void SendLine(char *str);
+void SendLine2(char *str,char *fcolor,char *bcolor);
 
 void UartInit(void);
 #endif

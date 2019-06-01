@@ -19,6 +19,12 @@ void SendStr(char *str)
 	}
 }
 
+void SendLine(char *str)
+{
+	SendStr(str);
+	SendStr("\r\n");
+}
+
 void SendStr2(char *str,char *fcolor,char *bcolor)
 {
 	SendStr(fcolor);
@@ -26,6 +32,12 @@ void SendStr2(char *str,char *fcolor,char *bcolor)
 	SendStr(str);
 	SendStr(DEFAULT_F_Color);
 	SendStr(DEFAULT_B_Color);
+}
+
+void SendLine2(char *str,char *fcolor,char *bcolor)
+{
+	SendStr2(str,fcolor,bcolor);
+	SendStr("\r\n");
 }
 
 void SendHexByte(unsigned char dat)
