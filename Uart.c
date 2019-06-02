@@ -1,6 +1,5 @@
 #include "Uart.h"
 
-
 void SendByte(char dat)
 {
 	SBUF = dat;
@@ -30,8 +29,8 @@ void SendStr2(char *str,char *fcolor,char *bcolor)
 	SendStr(fcolor);
 	SendStr(bcolor);
 	SendStr(str);
-	SendStr(DEFAULT_F_Color);
-	SendStr(DEFAULT_B_Color);
+	SendStr(DEFAULT_F_COLOR);
+	SendStr(DEFAULT_B_COLOR);
 }
 
 void SendLine2(char *str,char *fcolor,char *bcolor)
@@ -66,9 +65,6 @@ void UartInit(void)		//115200bps@30.000MHz
 	TH1 = 0xF8;		//设定定时器重装值
 	ET1 = 0;		//禁止定时器1中断
 	TR1 = 1;		//启动定时器1
-	
-	//ES    = 1;			/* enable serial interrupt */
-	//EA    = 1;			/* enable all interrupt */
 }
 
 void SendUInt(unsigned int number)

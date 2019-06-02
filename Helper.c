@@ -1,3 +1,4 @@
+/* 字符串转小写 */
 void toLower(unsigned char* str)
 {
     int i;

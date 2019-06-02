@@ -5,11 +5,10 @@ char **Argv;
 
 const COMMAND code CommandList[] = {
 	{"help",Help,"","帮助文档"},
-	{"prompt",Prompt,"<string>","修改属性"},
 	{"clear",Clear,"","清屏"},
 	{"reboot",Reboot,"","重启"},
-	{"setbit",SetBit,"<BankID> <PinID>","设置制定IO口为1"},
-	{"resetbit",ResetBit,"<BankID> <PinID>","重置制定IO口为0"},
+	{"setbit",SetBit,"<BankID> <PinID>","设置IO口为1"},
+	{"resetbit",ResetBit,"<BankID> <PinID>","重置IO口为0"},
 	{"getbit",GetBit,"<BankID> <PinID>","读取IO口状态"},
 	{NULL,NULL,NULL,NULL}
 };
@@ -154,11 +153,11 @@ void Help()
 		for(i = 0; CommandList[i].HelpString!=NULL; i++)
 		{
 			SendStr(" ");
-			SendStr2(CommandList[i].CommandName,F_RED,B_BLACK);
+			SendStr2(CommandList[i].CommandName,F_RED,DEFAULT_B_COLOR);
 			SendStr(" ");
-			SendStr2(CommandList[i].Metadata,F_GREEN,B_BLACK);
-			SendStr2(" -- ",F_YELLOW,B_BLACK);
-			SendStr2(CommandList[i].HelpString,F_YELLOW,B_BLACK);
+			SendStr2(CommandList[i].Metadata,F_GREEN,DEFAULT_B_COLOR);
+			SendStr2(" -- ",F_YELLOW,DEFAULT_B_COLOR);
+			SendStr2(CommandList[i].HelpString,F_YELLOW,DEFAULT_B_COLOR);
 			SendStr("\r\n");
 		}
 		SendStr("\r\n");
@@ -167,31 +166,6 @@ void Help()
 		SendStr(" 无效的操作: 参数过多\r\n");
 		SendStr(" 例子:\r\n");
 		SendStr("     help\r\n");
-		break;
-	}
-}
-
-void Prompt()
-{
-	char argc=Argc;
-	const char **argv=Argv;
-	switch(argc)
-	{
-	case 2:
-		if(strlen(argv[1]) >= MAX_PROMPT_BUFFER_SIZE)
-		{
-			SendStr(" Warnning:Your argument is too long!\r\n\r\n");
-			break;
-		}
-		memcpy(PromptBuffer,argv[1],MAX_PROMPT_BUFFER_SIZE);
-		SendStr(" Prompt is chagned to \"");
-		sprintf(&SerialBuffer[0],"%s\"\r\n\r\n",&PromptBuffer[0]);
-		SendStr(&SerialBuffer[0]);
-		break;
-	default:
-		SendStr(" Invalid 'prompt' command: too few or many arguments\r\n");
-		SendStr(" Usage:\r\n");
-		SendStr("     prompt <string>\r\n");
 		break;
 	}
 }

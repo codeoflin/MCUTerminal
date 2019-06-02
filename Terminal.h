@@ -9,16 +9,16 @@
 #include <stdio.h>
 #include <ctype.h>
 #define MAX_SERIAL_BUFFER_SIZE		64
-#define MAX_PROMPT_BUFFER_SIZE		8
 #define MAX_VT_COMMAND_BUFFER_SIZE	16
-extern char idata SerialBuffer[MAX_SERIAL_BUFFER_SIZE];
-extern char idata PromptBuffer[MAX_PROMPT_BUFFER_SIZE];
+
+extern char idata SerialBuffer[];
+extern char idata VTCmdBuffer[];
 
 typedef enum {
-	PS_WHITESPACE,
-	PS_TOKEN,
-	PS_STRING,
-	PS_ESCAPE
+	PS_WHITESPACE,//普通模式:空白
+	PS_TOKEN,//普通模式:输入中
+	PS_STRING,//字符串模式
+	PS_ESCAPE//转义模式
 }PARSESTATE;
 
 /*前景色*/
@@ -54,9 +54,9 @@ typedef enum {
 #define    B_LIGHTCYAN 		"\033[46;1m" 		/* 亮青 */
 #define    B_LIGHTWHITE 	"\033[47;1m" 		/* 亮白 */
 
-#define    DEFAULT_F_Color			F_LIGHTGREEN	/* 默认前景色 */
-#define    DEFAULT_B_Color			B_BLACK			/* 默认背景色 */
-#define    PROMPT_F_Color			F_WHITE			/* 命令提示前景色 */
+#define    DEFAULT_F_COLOR			F_LIGHTGREEN	/* 默认前景色 */
+#define    DEFAULT_B_COLOR			B_BLACK			/* 默认背景色 */
+#define    PROMPT_F_COLOR			F_WHITE			/* 命令提示前景色 */
 
 #define    BOLDFONT 		"\033[1m" 			/* Set blod font */
 #define    UNDERLINEFONT 	"\033[4m" 			/* Set underline font */
