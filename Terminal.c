@@ -156,11 +156,19 @@ void VTInput(unsigned char sbuftemp)
 				SendStr("\033[C");
 			}
 			break;
-		case '~'://有可能是删除键
-			//SendUInt(argc);
+		case '~'://按键信息
 			if(argc==1)
 			{
-				if(argv[0]=3)//确认是删除键
+				if(argv[0]==1)//Home
+				{
+					//if(SerialBuffer[CursorPosion] == 0)break;
+					SendStr("\033[");
+					SendUInt(CursorPosion);
+					SendStr("D");
+					CursorPosion=0;
+					break;
+				}
+				if(argv[0]==3)//Delete
 				{
 					if(SerialBuffer[CursorPosion] == 0)break;
 					//记录下游标位置,然后内容前移,恢复游标位置
@@ -171,6 +179,16 @@ void VTInput(unsigned char sbuftemp)
 					SendStr(RESTORECURSOR);//恢复光标位置
 					//在内存里把光标后面的内容全部往前移一格(包括末尾的\0)
 					for (i = CursorPosion; i < strlen(SerialBuffer); i++)SerialBuffer[i]=SerialBuffer[i+1];
+					break;
+				}
+				if(argv[0]==4)//End
+				{
+					if(SerialBuffer[CursorPosion] == 0)break;
+					SendStr("\033[");
+					SendUInt(strlen(SerialBuffer)-CursorPosion);
+					SendStr("C");
+					CursorPosion=strlen(SerialBuffer);
+					break;
 				}
 			}
 			break;
