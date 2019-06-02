@@ -141,19 +141,18 @@ void VTInput(unsigned char sbuftemp)
 	
 	switch(VTCmdBuffer[VTCursorPosion-1])
 	{
-		case 'D'://暂且先当做删除处理
+		case 'D'://光标左移
 			if(CursorPosion > 0)
 			{
 				CursorPosion--;
 				SendByte(0x08);
-				SendByte(' ');
-				SendByte(0x08);
 			}
-			SerialBuffer[CursorPosion] = '\0';
-			if(argc>=1)
+			break;
+		case 'C'://光标右移
+			if(SerialBuffer[CursorPosion] != '\0')
 			{
-				//SendUInt(argv[0]);
-				//SendStr("\r\n");
+				CursorPosion++;
+				SendStr("\033[C");
 			}
 			break;
 		default:
@@ -167,6 +166,8 @@ void VTInput(unsigned char sbuftemp)
 /* 普通字符键盘输入 */
 void CharacterInput(unsigned char sbuftemp)
 {
+	unsigned char temp=0;
+	int i;
 	switch(sbuftemp)
 	{
 	case 0x1B://ESC
@@ -177,14 +178,17 @@ void CharacterInput(unsigned char sbuftemp)
 	case 0x07:
 	case 0x7E:
 	case 0x7F:
-		if(CursorPosion > 0)
-		{
-			CursorPosion--;
-			SendByte(0x08);
-			SendByte(' ');
-			SendByte(0x08);
-		}
-		SerialBuffer[CursorPosion] = '\0';
+		if(CursorPosion <= 0)break;
+		CursorPosion--;
+		//首先左移一下游标,然后记录下位置
+		SendByte(0x08);
+		SendStr(SAVECURSOR);
+		//在内存里输出光标后的内容,此时会覆盖光标里的字,相当于原地删除了
+		SendStr(&SerialBuffer[CursorPosion]);
+		SendByte(0x20);//在末尾输出个空格,覆盖末尾的字留下的残影.
+		SendStr(RESTORECURSOR);//恢复光标位置
+		//在内存里把光标后面的内容全部往前移一格(包括末尾的\0)
+		for (i = CursorPosion; i < strlen(SerialBuffer); i++)SerialBuffer[i]=SerialBuffer[i+1];
 		break;
 	case '\r':
 	case '\n':
@@ -196,7 +200,8 @@ void CharacterInput(unsigned char sbuftemp)
 	case '\t':
 		break;
 	default:
-		if(CursorPosion >= MAX_SERIAL_BUFFER_SIZE)
+		//如果用户输入过长的内容,清空缓冲区并提示
+		if(strlen(SerialBuffer)+1 >= MAX_SERIAL_BUFFER_SIZE)
 		{
 			CursorPosion = 0;
 			memset(SerialBuffer,'\0',MAX_SERIAL_BUFFER_SIZE);
@@ -204,8 +209,14 @@ void CharacterInput(unsigned char sbuftemp)
 			SendStr2(PromptBuffer,PROMPT_F_COLOR,DEFAULT_B_COLOR);
 			break;
 		}
+		//把当前位置以及之后的内容全部后移,然后在当前位置的字符填入用户的按键
+		for (i = strlen(SerialBuffer)-1; i >= CursorPosion; i--)SerialBuffer[i+1]=SerialBuffer[i];
 		SerialBuffer[CursorPosion] = sbuftemp;
+		//将以上操作,输出到界面上
 		SendByte(sbuftemp);
+		SendStr(SAVECURSOR);
+		SendStr(&SerialBuffer[CursorPosion+1]);
+		SendStr(RESTORECURSOR);
 		CursorPosion++;
 		break;
 	}
