@@ -90,6 +90,7 @@ void VTInput(unsigned char sbuftemp)
 	case 'X':
 	case 'Y':
 	case 'Z':
+	case '~':
 		VTControlModeFlag=0;
 	default:
 		//如果输入的VT参数过长.强行退出VT模式
@@ -114,17 +115,16 @@ void VTInput(unsigned char sbuftemp)
 		memset(VTCmdBuffer,'\0',MAX_VT_COMMAND_BUFFER_SIZE);
 		return;
 	}
-
+	//判断是否有参数,如有则对其解析
 	if(VTCursorPosion>2)
 	{
 		for (i = 1; i < VTCursorPosion; i++)
 		{
-			if (VTCmdBuffer[i]==';')
+			if (VTCmdBuffer[i]==';'||VTCmdBuffer[i]==',')
 			{
 				argc++;
 				continue;
 			}
-			
 			if(VTCmdBuffer[i]>=0x30&&VTCmdBuffer[i]<=0x39)
 			{
 				argv[argc]=(argv[argc]*10)+(VTCmdBuffer[i]-0x30);
@@ -138,7 +138,8 @@ void VTInput(unsigned char sbuftemp)
 			}
 		}
 	}
-	
+	//SendLine(VTCmdBuffer);
+	//执行VT命令
 	switch(VTCmdBuffer[VTCursorPosion-1])
 	{
 		case 'D'://光标左移
@@ -153,6 +154,24 @@ void VTInput(unsigned char sbuftemp)
 			{
 				CursorPosion++;
 				SendStr("\033[C");
+			}
+			break;
+		case '~'://有可能是删除键
+			//SendUInt(argc);
+			if(argc==1)
+			{
+				if(argv[0]=3)//确认是删除键
+				{
+					if(SerialBuffer[CursorPosion] == 0)break;
+					//记录下游标位置,然后内容前移,恢复游标位置
+					SendStr(SAVECURSOR);
+					//在内存里输出光标后的内容,此时会覆盖光标里的字,相当于原地删除了
+					SendStr(&SerialBuffer[CursorPosion+1]);
+					SendByte(0x20);//在末尾输出个空格,覆盖末尾的字留下的残影.
+					SendStr(RESTORECURSOR);//恢复光标位置
+					//在内存里把光标后面的内容全部往前移一格(包括末尾的\0)
+					for (i = CursorPosion; i < strlen(SerialBuffer); i++)SerialBuffer[i]=SerialBuffer[i+1];
+				}
 			}
 			break;
 		default:
@@ -184,7 +203,7 @@ void CharacterInput(unsigned char sbuftemp)
 		SendByte(0x08);
 		SendStr(SAVECURSOR);
 		//在内存里输出光标后的内容,此时会覆盖光标里的字,相当于原地删除了
-		SendStr(&SerialBuffer[CursorPosion]);
+		SendStr(&SerialBuffer[CursorPosion+1]);
 		SendByte(0x20);//在末尾输出个空格,覆盖末尾的字留下的残影.
 		SendStr(RESTORECURSOR);//恢复光标位置
 		//在内存里把光标后面的内容全部往前移一格(包括末尾的\0)
