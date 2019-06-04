@@ -15,9 +15,13 @@ const COMMAND code CommandList[] = {
 };
 /*****************************************************************************/
 
-void outpurError()
+void outpurError(char* notice,char* example)
 {
-
+	SendStr(" 无效的操作: ");
+	SendLine(notice);
+	SendLine(" 例子:");
+	SendStr("     ");
+	SendLine(example);
 }
 
 unsigned char readFlash(unsigned int addr)
@@ -37,10 +41,7 @@ void flash()
 	case 4:
 		if (strlen(argv[1])!=1)
 		{
-			SendStr(" 无效的操作: 参数1错误.\r\n");
-			SendStr(" 例子:\r\n");
-			SendStr("     flash r 0 0\r\n");
-			SendStr("     flash w 0 \"00 1F CD\"\r\n");
+			outpurError("参数1错误!","flash r 0 0\r\n     flash w 0 \"00 1F CD\"");
 			break;
 		}
 	
@@ -48,15 +49,9 @@ void flash()
 		{
 			addr=toLong(argv[2]);
 			len=toLong(argv[3]);
-			//SendUInt(addr);
-			//SendUInt(len);
-			//break;
 			if(addr<0||len<=0)
 			{
-				SendStr(" 无效的操作: 起点或长度错误!\r\n");
-				SendStr(" 例子:\r\n");
-				SendStr("     flash r 0 0\r\n");
-				SendStr("     flash w 0 \"00 1F CD\"\r\n");
+				outpurError("起点或长度错误!","flash r 0 0\r\n     flash w 0 \"00 1F CD\"");
 				break;
 			}
 			SendLine2("    |00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15",F_BLUE,DEFAULT_B_COLOR);
@@ -76,10 +71,7 @@ void flash()
 		SendStr("\r\n");
 		break;
 	default:
-		SendStr(" 无效的操作: 参数数量不对.\r\n");
-		SendStr(" 例子:\r\n");
-		SendStr("     flash r 0 0\r\n");
-		SendStr("     flash w 0 \"00 1F CD\"\r\n");
+		outpurError("参数数量不对!","flash r 0 0\r\n     flash w 0 \"00 1F CD\"");
 		break;
 	}
 }
@@ -96,9 +88,7 @@ void setBit()
 		arg2=(unsigned char)argv[2][0]-0x30;
 		if(arg2>9)
 		{
-			SendStr(" 无效的操作: 输入了非数字的参数!\r\n");
-			SendStr(" 例子:\r\n");
-			SendStr("     SetBit 1 1\r\n");
+			outpurError("输入了非数字的参数!","SetBit 1 1");
 			break;
 		}
 		/* //注释原因:P30 P31可以不是串口
@@ -121,9 +111,7 @@ void setBit()
 		if(argv[1][0]=='7')P7|=newstatus;
 		break;
 	default:
-		SendStr(" 无效的操作: 参数数量不对!\r\n");
-		SendStr(" 例子:\r\n");
-		SendStr("     SetBit 1 1\r\n");
+		outpurError("参数数量不对!","SetBit 1 1");
 		break;
 	}
 }
@@ -185,9 +173,7 @@ void getBit()
 		arg2=(unsigned char)argv[2][0]-0x30;
 		if(arg2>7)
 		{
-			SendStr(" 无效的操作: 参数非数字或者大于7!\r\n");
-			SendStr(" 例子:\r\n");
-			SendStr("     GetBit 1 1\r\n");
+			outpurError("参数非数字或者大于7!","GetBit 1 1");
 			break;
 		}
 		if(argv[1][0]=='0')status=P0;
@@ -198,18 +184,10 @@ void getBit()
 		if(argv[1][0]=='5')status=P5;
 		if(argv[1][0]=='6')status=P6;
 		if(argv[1][0]=='7')status=P7;
-
-		//SendStr("数据:");
-		//SerialSendHexByte(status);
-		//SendStr("\r\n");
-		SendStr((status&(unsigned char)_crol_(1,arg2))==0?"False":"True");
-		SendStr("\r\n");
-
+		SendLine((status&(unsigned char)_crol_(1,arg2))==0?"False":"True");
 		break;
 	default:
-		SendStr(" 无效的操作: 参数数量不对\r\n");
-		SendStr(" 例子:\r\n");
-		SendStr("     GetBit 1 1\r\n");
+		outpurError("参数数量不对!","GetBit 1 1");
 		break;
 	}
 }
@@ -229,15 +207,12 @@ void help()
 			SendStr(" ");
 			SendStr2(CommandList[i].Metadata,F_GREEN,DEFAULT_B_COLOR);
 			SendStr2(" -- ",F_YELLOW,DEFAULT_B_COLOR);
-			SendStr2(CommandList[i].HelpString,F_YELLOW,DEFAULT_B_COLOR);
-			SendStr("\r\n");
+			SendLine2(CommandList[i].HelpString,F_YELLOW,DEFAULT_B_COLOR);
 		}
-		SendStr("\r\n");
+		SendLine(NULL);
 		break;
 	default:
-		SendStr(" 无效的操作: 参数过多\r\n");
-		SendStr(" 例子:\r\n");
-		SendStr("     help\r\n");
+		outpurError("参数过多!","help");
 		break;
 	}
 }
@@ -253,9 +228,7 @@ void clear()
 		SendStr(CURSORHOME);
 		break;
 	default:
-		SendStr(" 无效的操作: 参数过多!\r\n");
-		SendStr(" 例子:\r\n");
-		SendStr("     clear\r\n");
+		outpurError("参数过多!","clear");
 		break;
 	}
 }
@@ -270,9 +243,7 @@ void reboot()
 		(*(void(*)())0)(); 
 		break;
 	default:
-		SendStr(" 无效的操作: 参数过多!\r\n");
-		SendStr(" 例子:\r\n");
-		SendStr("     reboot\r\n");
+		outpurError("参数过多!","reboot");
 		break;
 	}
 }
