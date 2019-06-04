@@ -2,9 +2,9 @@
 #define  __TERMINAL_H__
 #include "STC15F2K60S2.h"
 #include "Commands.h"
+#include <string.h>
 #include "Uart.h"
 #include "Helper.h"
-#include <string.h>
 #include <intrins.h>
 #include <stdio.h>
 #include <ctype.h>

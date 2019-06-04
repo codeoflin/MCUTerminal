@@ -5,6 +5,7 @@
 
 void main()
 {
+	P_SW1=0x40;//切换串口1到P36 P37
 	UartInit();
 	InitTerminal();
 	while(1)

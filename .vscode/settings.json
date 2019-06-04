@@ -6,7 +6,8 @@
         "uart.h": "c",
         "COMMANDS.C": "cpp",
         "HELPER.C": "cpp",
-        "TERMINAL.C": "cpp"
+        "TERMINAL.C": "cpp",
+        "terminal.h": "c"
     },
     "C51.binDir": "D:\\51_mcu_mini_compiler\\BIN"
 }

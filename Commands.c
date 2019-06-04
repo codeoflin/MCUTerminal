@@ -4,16 +4,87 @@ char Argc;
 char **Argv;
 
 const COMMAND code CommandList[] = {
-	{"help",Help,"","帮助文档"},
-	{"clear",Clear,"","清屏"},
-	{"reboot",Reboot,"","重启"},
-	{"setbit",SetBit,"<BankID> <PinID>","设置IO口为1"},
-	{"resetbit",ResetBit,"<BankID> <PinID>","重置IO口为0"},
-	{"getbit",GetBit,"<BankID> <PinID>","读取IO口状态"},
+	{"help",help,"","帮助文档"},
+	{"clear",clear,"","清屏"},
+	{"reboot",reboot,"","重启"},
+	{"flash",flash,"<mode> <address> <data|lenght>","读取EEPROM,参数:w或者r,地址,写的数据|读的长度."},
+	{"setbit",setBit,"<BankID> <PinID>","设置IO口为1"},
+	{"resetbit",resetBit,"<BankID> <PinID>","重置IO口为0"},
+	{"getbit",getBit,"<BankID> <PinID>","读取IO口状态"},
 	{NULL,NULL,NULL,NULL}
 };
 /*****************************************************************************/
-void SetBit()
+
+void outpurError()
+{
+
+}
+
+unsigned char readFlash(unsigned int addr)
+{
+	return *(char code *)(addr);
+}
+
+void flash()
+{
+	unsigned char dat=0;
+	char argc=Argc;
+	const char **argv=Argv;
+	long int addr=0,len=0,i=0;
+	char buff[0x40];
+	switch(argc)
+	{
+	case 4:
+		if (strlen(argv[1])!=1)
+		{
+			SendStr(" 无效的操作: 参数1错误.\r\n");
+			SendStr(" 例子:\r\n");
+			SendStr("     flash r 0 0\r\n");
+			SendStr("     flash w 0 \"00 1F CD\"\r\n");
+			break;
+		}
+	
+		if(argv[1][0]=='r'||argv[1][0]=='R')
+		{
+			addr=toLong(argv[2]);
+			len=toLong(argv[3]);
+			//SendUInt(addr);
+			//SendUInt(len);
+			//break;
+			if(addr<0||len<=0)
+			{
+				SendStr(" 无效的操作: 起点或长度错误!\r\n");
+				SendStr(" 例子:\r\n");
+				SendStr("     flash r 0 0\r\n");
+				SendStr("     flash w 0 \"00 1F CD\"\r\n");
+				break;
+			}
+			SendLine2("    |00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15",F_BLUE,DEFAULT_B_COLOR);
+			SendLine2("    |00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F",F_BLUE,DEFAULT_B_COLOR);
+			for(;len>0;)
+			{
+				for(i=0;i<0x40;i++)
+				{
+					if(i>=len)break;
+					buff[i]=readFlash(addr+i);
+				}
+				SendHexString2(buff,addr,len>0x40?0x40:len);
+				addr+=0x40;
+				len-=0x40;
+			}
+		}
+		SendStr("\r\n");
+		break;
+	default:
+		SendStr(" 无效的操作: 参数数量不对.\r\n");
+		SendStr(" 例子:\r\n");
+		SendStr("     flash r 0 0\r\n");
+		SendStr("     flash w 0 \"00 1F CD\"\r\n");
+		break;
+	}
+}
+
+void setBit()
 {
 	char argc=Argc;
 	const char **argv=Argv;
@@ -22,22 +93,23 @@ void SetBit()
 	switch(argc)
 	{
 	case 3:
-	
 		arg2=(unsigned char)argv[2][0]-0x30;
 		if(arg2>9)
 		{
-			SendStr(" Invalid 'SetBit' command: arguments not number!\r\n");
-			SendStr(" Usage:\r\n");
+			SendStr(" 无效的操作: 输入了非数字的参数!\r\n");
+			SendStr(" 例子:\r\n");
 			SendStr("     SetBit 1 1\r\n");
 			break;
 		}
+		/* //注释原因:P30 P31可以不是串口
 		if(argv[1][0]=='3'&&(arg2==0||arg2==1))
 		{
-			SendStr(" Invalid 'SetBit' command: P31 and P30 is SerialPort!\r\n");
+			SendStr(" 无效的 'SetBit' 命令: P31 和 P30 is SerialPort!\r\n");
 			SendStr(" Usage:\r\n");
 			SendStr("     SetBit 1 1\r\n");
 			break;
 		}
+		// */
 		newstatus=_crol_(1,arg2);
 		if(argv[1][0]=='0')P0|=newstatus;
 		if(argv[1][0]=='1')P1|=newstatus;
@@ -49,14 +121,14 @@ void SetBit()
 		if(argv[1][0]=='7')P7|=newstatus;
 		break;
 	default:
-		SendStr(" Invalid 'SetBit' command: too many arguments\r\n");
-		SendStr(" Example:\r\n");
+		SendStr(" 无效的操作: 参数数量不对!\r\n");
+		SendStr(" 例子:\r\n");
 		SendStr("     SetBit 1 1\r\n");
 		break;
 	}
 }
 
-void ResetBit()
+void resetBit()
 {
 	char argc=Argc;
 	const char **argv=Argv;
@@ -98,7 +170,7 @@ void ResetBit()
 	}
 }
 
-void GetBit()
+void getBit()
 {
 	char argc=Argc;
 	const char **argv=Argv;
@@ -113,8 +185,8 @@ void GetBit()
 		arg2=(unsigned char)argv[2][0]-0x30;
 		if(arg2>7)
 		{
-			SendStr(" Invalid 'GetBit' command: arguments not number or over 7!\r\n");
-			SendStr(" Usage:\r\n");
+			SendStr(" 无效的操作: 参数非数字或者大于7!\r\n");
+			SendStr(" 例子:\r\n");
 			SendStr("     GetBit 1 1\r\n");
 			break;
 		}
@@ -135,14 +207,14 @@ void GetBit()
 
 		break;
 	default:
-		SendStr(" Invalid 'GetBit' command: too many arguments\r\n");
-		SendStr(" Example:\r\n");
+		SendStr(" 无效的操作: 参数数量不对\r\n");
+		SendStr(" 例子:\r\n");
 		SendStr("     GetBit 1 1\r\n");
 		break;
 	}
 }
 
-void Help()
+void help()
 {
 	char argc=Argc;
 	const char **argv=Argv;
@@ -170,7 +242,7 @@ void Help()
 	}
 }
 
-void Clear()
+void clear()
 {
 	char argc=Argc;
 	const char **argv=Argv;
@@ -181,14 +253,14 @@ void Clear()
 		SendStr(CURSORHOME);
 		break;
 	default:
-		SendStr(" Invalid 'clear' command: too many arguments\r\n");
-		SendStr(" Usage:\r\n");
+		SendStr(" 无效的操作: 参数过多!\r\n");
+		SendStr(" 例子:\r\n");
 		SendStr("     clear\r\n");
 		break;
 	}
 }
 
-void Reboot()
+void reboot()
 {
 	char argc=Argc;
 	const char **argv=Argv;
@@ -198,8 +270,8 @@ void Reboot()
 		(*(void(*)())0)(); 
 		break;
 	default:
-		SendStr(" Invalid 'reboot' command: too many arguments\r\n");
-		SendStr(" Usage:\r\n");
+		SendStr(" 无效的操作: 参数过多!\r\n");
+		SendStr(" 例子:\r\n");
 		SendStr("     reboot\r\n");
 		break;
 	}

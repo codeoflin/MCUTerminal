@@ -2,7 +2,7 @@
 #define  __COMMANDS_H__
 #include "STC15F2K60S2.h"
 #include "Terminal.h"
-
+#include <string.h>
 typedef struct {
 	const char *CommandName;
 	void (*CommandFunc)();
@@ -14,17 +14,16 @@ extern char Argc;
 extern char **Argv;
 
 //基本操作
-void Help();//帮助命令
-void Prompt();//属性设置
-void Clear();//清屏
-void Reboot();//重启
+void help();//帮助命令
+void clear();//清屏
+void reboot();//重启
 //GPIO操作
-void SetBit();//设置GPIO引脚
-void ResetBit();//清零GPIO引脚
-void GetBit();//获取GPIO引脚状态
+void setBit();//设置GPIO引脚
+void resetBit();//清零GPIO引脚
+void getBit();//获取GPIO引脚状态
+//flash操作
+void flash();
 // */
 
 extern const COMMAND code CommandList[];
-
-
 #endif
