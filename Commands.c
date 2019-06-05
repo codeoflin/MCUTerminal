@@ -260,7 +260,8 @@ void reboot()
 	switch(argc)
 	{
 	case 1:
-		(*(void(*)())0)(); 
+		//(*(void(*)())0)(); 
+		IAP_CONTR = 0x60;
 		break;
 	default:
 		outpurError("参数过多!","reboot");

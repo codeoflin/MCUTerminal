@@ -1,6 +1,6 @@
 #ifndef __UART_H_
 #define __UART_H_
-#include "STC15F2K60S2.h"
+#include "STC.h"
 #include "Terminal.h"
 void SendByte(char dat);
 void SendStr(char *str);

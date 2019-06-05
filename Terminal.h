@@ -1,6 +1,6 @@
 #ifndef  __TERMINAL_H__
 #define  __TERMINAL_H__
-#include "STC15F2K60S2.h"
+#include "STC.h"
 #include "Commands.h"
 #include <string.h>
 #include "Devices/Uart.h"
@@ -79,8 +79,8 @@ typedef enum {
 /*****************************************************************************/
 void InitTerminal(void);
 void RunTerminal(void);
-
 void SerialInterrupt(void);
+void SerialInput(char sbuftemp);
 void ParseArgs(char *argstr,char *argc_p,char **argv, char **resid);
 void ExecCommand(char *buf);
 /*****************************************************************************/

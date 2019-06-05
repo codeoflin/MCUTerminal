@@ -1,6 +1,6 @@
 #ifndef  __COMMANDS_H__
 #define  __COMMANDS_H__
-#include "STC15F2K60S2.h"
+#include "STC.h"
 #include "Terminal.h"
 #include "Devices/Flash.h"
 #include <string.h>

@@ -7,7 +7,11 @@
         "COMMANDS.C": "cpp",
         "HELPER.C": "cpp",
         "TERMINAL.C": "cpp",
-        "terminal.h": "c"
+        "terminal.h": "c",
+        "stc.h": "c",
+        "commands.h": "c",
+        "flash.h": "c",
+        "helper.h": "c"
     },
     "C51.binDir": "D:\\51_mcu_mini_compiler\\BIN"
 }

@@ -5,9 +5,13 @@ char idata SerialBuffer[MAX_SERIAL_BUFFER_SIZE];
 char idata VTCmdBuffer[MAX_VT_COMMAND_BUFFER_SIZE];//
 char code PromptBuffer[]=">";
 char idata CursorPosion;/* 命令行输入缓冲区指针 */
+char idata LastCursorPosion=0;/* 上次刷新显示时的命令行输入缓冲区指针 */
 char idata VTCursorPosion;/* VT命令缓冲区指针 */
 char idata ExecCommandFlag;/* 执行命令标志 */
+char idata WaitingDisplayFlag=0;/* 等待刷新显示 */
 char idata VTControlModeFlag;/* VT控制模式 */
+long int GapCounter=0;
+long int Counter=0;
 /*****************************************************************************/
 /* 开机初始化 */
 void InitTerminal(void)
@@ -146,12 +150,14 @@ void VTInput(unsigned char sbuftemp)
 			if(CursorPosion > 0)
 			{
 				CursorPosion--;
+				LastCursorPosion--;
 				SendByte(0x08);
 			}
 			break;
 		case 'C'://光标右移
 			if(SerialBuffer[CursorPosion] != '\0')
 			{
+				LastCursorPosion++;
 				CursorPosion++;
 				SendStr("\033[C");
 			}
@@ -216,6 +222,7 @@ void CharacterInput(unsigned char sbuftemp)
 	case 0x7E:
 	case 0x7F:
 		if(CursorPosion <= 0)break;
+		LastCursorPosion--;
 		CursorPosion--;
 		//首先左移一下游标,然后记录下位置
 		SendByte(0x08);
@@ -238,34 +245,39 @@ void CharacterInput(unsigned char sbuftemp)
 		break;
 	default:
 		//如果用户输入过长的内容,清空缓冲区并提示
-		if(strlen(SerialBuffer)+1 >= MAX_SERIAL_BUFFER_SIZE)
+		temp=strlen(SerialBuffer);
+		if(temp >= MAX_SERIAL_BUFFER_SIZE)
 		{
-			CursorPosion = 0;
+			LastCursorPosion = CursorPosion = 0;
 			memset(SerialBuffer,'\0',MAX_SERIAL_BUFFER_SIZE);
 			SendStr2("\r\n 警告:您输入的内容过长!\r\n\r\n",F_RED,DEFAULT_B_COLOR);
 			SendStr2(PromptBuffer,PROMPT_F_COLOR,DEFAULT_B_COLOR);
 			break;
 		}
+		
 		//把当前位置以及之后的内容全部后移,然后在当前位置的字符填入用户的按键
-		for (i = strlen(SerialBuffer)-1; i >= CursorPosion; i--)SerialBuffer[i+1]=SerialBuffer[i];
+		for (i = temp-1; i >= CursorPosion; i--)SerialBuffer[i+1]=SerialBuffer[i];
 		SerialBuffer[CursorPosion] = sbuftemp;
-		//将以上操作,输出到界面上
-		SendByte(sbuftemp);
-		SendStr(SAVECURSOR);
-		SendStr(&SerialBuffer[CursorPosion+1]);
-		SendStr(RESTORECURSOR);
 		CursorPosion++;
+		WaitingDisplayFlag=1;//设置一个标志,等串口空闲了再刷新界面显示
+		// */
 		break;
 	}
 }
 
-//串口事件
-void SerialInterrupt(void)//interrupt 4 using 3
+void SerialInterrupt() interrupt 4 using 1
 {
 	char sbuftemp;
-	if(!RI)return;
+	if(RI==0)return;
 	sbuftemp = SBUF;
-	RI = 0;
+	RI=0;
+	SerialInput(sbuftemp);
+}
+
+//串口事件
+void SerialInput(char sbuftemp)
+{
+	P11=!P11;
 	if(VTControlModeFlag)
 	{
 		VTInput(sbuftemp);
@@ -371,6 +383,8 @@ void ExecCommand(char *buf)
 		}
 		if(Command == 0)
 		{
+			//SendUInt(Counter);
+			//SendLine("\r\n");
 			SendStr("'");
 			SendStr2(argv[0],F_RED,DEFAULT_B_COLOR);
 			SendStr("' 不是内部或外部命令，也不是可运行的程序.如果需要帮助请输入");
@@ -388,7 +402,39 @@ void ExecCommand(char *buf)
 
 void RunTerminal(void)
 {
-	if (RI==1)SerialInterrupt(); 
+	char sbuftemp;
+	if (RI==1)
+	{
+		GapCounter=0;
+		sbuftemp = SBUF;
+		RI=0;
+		SerialInput(sbuftemp);
+	}
+	//在串口操作里面无法及时响应,如果串口有连续空闲,则刷新显示
+	if(RI==0)GapCounter++;
+	if(GapCounter>=128&&WaitingDisplayFlag==1)
+	{
+		GapCounter=0;
+		WaitingDisplayFlag=0; 
+		SendStr(SAVECURSOR);
+		SendStr(&SerialBuffer[LastCursorPosion]);
+		SendStr(RESTORECURSOR);
+		if(LastCursorPosion>CursorPosion)
+		{
+			SendStr("\033[");
+			SendUInt(LastCursorPosion-CursorPosion);
+			SendStr("D");
+		}
+		else if(LastCursorPosion<CursorPosion)
+		{
+			SendStr("\033[");
+			SendUInt(CursorPosion-LastCursorPosion);
+			SendStr("C");
+		}
+		// */
+		LastCursorPosion=CursorPosion;
+	}
+	// */
 	if(ExecCommandFlag)
 	{
 		ExecCommand(SerialBuffer);
@@ -397,5 +443,6 @@ void RunTerminal(void)
 		CursorPosion = 0;
 		VTCursorPosion = 0;
 		ExecCommandFlag = 0;
+		LastCursorPosion=0;
 	}
 }

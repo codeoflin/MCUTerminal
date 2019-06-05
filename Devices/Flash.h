@@ -1,6 +1,6 @@
 #ifndef  __FLASH_H__
 #define  __FLASH_H__
-#include "STC15F2K60S2.h"
+#include "STC.h"
 #include <stdio.h>
 #include <string.h>
 #include <intrins.h>
