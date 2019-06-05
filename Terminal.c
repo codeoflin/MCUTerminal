@@ -1,7 +1,7 @@
 #include "Terminal.h"
 #include "Commands.h"
 /*****************************************************************************/
-char xdata SerialBuffer[MAX_SERIAL_BUFFER_SIZE];
+char idata SerialBuffer[MAX_SERIAL_BUFFER_SIZE];
 char idata VTCmdBuffer[MAX_VT_COMMAND_BUFFER_SIZE];//
 char code PromptBuffer[]=">";
 char idata CursorPosion;/* 命令行输入缓冲区指针 */

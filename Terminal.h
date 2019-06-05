@@ -8,10 +8,10 @@
 #include <intrins.h>
 #include <stdio.h>
 #include <ctype.h>
-#define MAX_SERIAL_BUFFER_SIZE		256
+#define MAX_SERIAL_BUFFER_SIZE		64
 #define MAX_VT_COMMAND_BUFFER_SIZE	16
 
-extern char xdata SerialBuffer[];
+extern char idata SerialBuffer[];
 extern char idata VTCmdBuffer[];
 
 typedef enum {
