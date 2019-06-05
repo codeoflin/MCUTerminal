@@ -48,13 +48,18 @@ void SendHexByte(unsigned char dat)
 	//SendByte(0x20);
 }
 
+/*
+根据byte数组,转为16进制字符串发送
+*/
 void SendHexString(char *str,int lenght)
 {
 	int i=0;
 	for(;i<lenght;i++)SendHexByte(str[i]);
 }
-
-void SendHexString2(char *str,unsigned int startaddr,int lenght)
+/*
+根据byte数组,转为16进制字符串发送,并自动按每16字节分行,每行在前面加4位地址
+*/
+void SendHexString2(char *str,unsigned int startaddr,unsigned int lenght)
 {
 	long int  i=0,l;
 	for(;i<lenght;i++)
@@ -69,7 +74,6 @@ void SendHexString2(char *str,unsigned int startaddr,int lenght)
 			addrbuff[1]=HEXTABLE[(newaddr>>8)%0x10];
 			addrbuff[0]=HEXTABLE[(newaddr>>12)%0x10];
 			SendStr2(addrbuff,F_BLUE,DEFAULT_B_COLOR);
-			//SendStr2("|",F_RED,DEFAULT_B_COLOR);
 		}
 		SendHexByte(str[i]);
 		SendStr(i%0x10==0xF?"\r\n":" ");

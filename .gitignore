@@ -5,10 +5,9 @@
 !.vscode/launch.json
 !.vscode/extensions.json
 *.hex
-编译过程中产生的错误或警告.TXT
 *.obj
 *.M51
 *.lnp
 *.lst
 *.__i
-build.bat
+编译过程中产生的错误或警告.TXT

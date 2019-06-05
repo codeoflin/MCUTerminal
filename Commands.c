@@ -7,7 +7,7 @@ const COMMAND code CommandList[] = {
 	{"help",help,"","帮助文档"},
 	{"clear",clear,"","清屏"},
 	{"reboot",reboot,"","重启"},
-	{"flash",flash,"<mode> <address> <data|lenght>","读取EEPROM,参数:w或者r,地址,写的数据|读的长度."},
+	{"flash",flash,"<mode> <address> <data|lenght>","EEPROM操作,参数:w|r|e,地址,写的数据|读的长度|(擦除时免传此参数)."},
 	{"setbit",setBit,"<BankID> <PinID>","设置IO口为1"},
 	{"resetbit",resetBit,"<BankID> <PinID>","重置IO口为0"},
 	{"getbit",getBit,"<BankID> <PinID>","读取IO口状态"},
@@ -29,33 +29,84 @@ unsigned char readFlash(unsigned int addr)
 	return *(char code *)(addr);
 }
 
+void writeFlash(unsigned int addr,unsigned char dat)
+{
+	IAP_CONTR=WT_30M;
+	IAP_CMD=2;//写命令
+	IAP_ADDRL=addr;
+	IAP_ADDRH=addr>>8;
+	IAP_DATA=dat;
+	IAP_TRIG=0x5A;
+	IAP_TRIG=0xA5;
+	_nop_();
+	IAP_CONTR=0;//控制寄存器
+	IAP_CMD=0;//命令寄存器
+	IAP_TRIG=0;//触发寄存器
+	IAP_ADDRH=0;
+	IAP_ADDRL=0;
+	return;
+}
+
+void EraseFlash(unsigned int addr)
+{
+	IAP_CONTR=WT_30M;
+	IAP_CMD=3;//擦命令
+	IAP_ADDRL=addr;
+	IAP_ADDRH=addr>>8;
+	IAP_TRIG=0x5A;
+	IAP_TRIG=0xA5;
+	_nop_();
+	IAP_CONTR=0;//控制寄存器
+	IAP_CMD=0;//命令寄存器
+	IAP_TRIG=0;//触发寄存器
+	IAP_ADDRH=0;
+	IAP_ADDRL=0;
+	return;
+}
+
 void flash()
 {
-	unsigned char dat=0;
 	char argc=Argc;
 	const char **argv=Argv;
-	long int addr=0,len=0,i=0;
+	//起点地址,要读写的长度
+	long int addr=0,len=0;
+	int i=0;
+	//读写缓冲区
 	char buff[0x40];
+	//输入命令有错误的时候用这个提示用户输入正确的命令
+	char* example="flash r 0 0\r\n     flash w 0 \"00 1F CD\"\r\n     flash e 0";
 	switch(argc)
 	{
+	case 3:
+		if (strlen(argv[1])!=1)
+		{
+			outpurError("参数1错误!",example);
+			break;
+		}
+		addr=toLong(argv[2]);//解析地址
+		if(argv[1][0]=='e'||argv[1][0]=='E')
+		{
+			EraseFlash(addr);
+			SendStr("操作完毕!");
+		}
+		break;
 	case 4:
 		if (strlen(argv[1])!=1)
 		{
-			outpurError("参数1错误!","flash r 0 0\r\n     flash w 0 \"00 1F CD\"");
+			outpurError("参数1错误!",example);
 			break;
 		}
-	
+		addr=toLong(argv[2]);//解析地址
 		if(argv[1][0]=='r'||argv[1][0]=='R')
 		{
-			addr=toLong(argv[2]);
-			len=toLong(argv[3]);
+			len=toLong(argv[3]);//解析长度
 			if(addr<0||len<=0)
 			{
-				outpurError("起点或长度错误!","flash r 0 0\r\n     flash w 0 \"00 1F CD\"");
+				outpurError("起点或长度错误!",example);
 				break;
 			}
-			SendLine2("    |00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15",F_BLUE,DEFAULT_B_COLOR);
 			SendLine2("    |00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F",F_BLUE,DEFAULT_B_COLOR);
+			//循环读取输出
 			for(;len>0;)
 			{
 				for(i=0;i<0x40;i++)
@@ -68,10 +119,25 @@ void flash()
 				len-=0x40;
 			}
 		}
-		SendStr("\r\n");
+
+		if(argv[1][0]=='w'||argv[1][0]=='W')
+		{
+			len=ParseHEX(argv[3],buff,0x40);
+			if(len<=0)
+			{
+				outpurError("请输入正确的HEX字符串!",example);
+				break;
+			}
+			for(i=0;i<len;i++)
+			{
+				writeFlash(addr+i,buff[i]);
+			}
+			SendLine("操作完毕!");
+		}
+		SendLine(NULL);
 		break;
 	default:
-		outpurError("参数数量不对!","flash r 0 0\r\n     flash w 0 \"00 1F CD\"");
+		outpurError("参数数量不对!",example);
 		break;
 	}
 }
@@ -128,16 +194,12 @@ void resetBit()
 		arg2=(unsigned char)argv[2][0]-0x30;
 		if(arg2>9)
 		{
-			SendStr(" Invalid 'ResetBit' command: arguments not number!\r\n");
-			SendStr(" Usage:\r\n");
-			SendStr("     ResetBit 1 1\r\n");
+			outpurError("请输入数字参数!","ResetBit 1 1");
 			break;
 		}
 		if(argv[1][0]=='3'&&(arg2==0||arg2==1))
 		{
-			SendStr(" Invalid 'ResetBit' command: P31 and P30 is SerialPort!\r\n");
-			SendStr(" Usage:\r\n");
-			SendStr("     ResetBit 1 1\r\n");
+			outpurError("P31 and P30 is SerialPort!","ResetBit 1 1");
 			break;
 		}
 		newstatus=_crol_(0xFE,arg2);
@@ -151,9 +213,7 @@ void resetBit()
 		if(argv[1][0]=='7')P7&=newstatus;
 		break;
 	default:
-		SendStr(" Invalid 'ResetBit' command: too many arguments\r\n");
-		SendStr(" Example:\r\n");
-		SendStr("     ResetBit 1 1\r\n");
+		outpurError("参数数量不对!","ResetBit 1 1");
 		break;
 	}
 }

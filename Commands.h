@@ -3,6 +3,11 @@
 #include "STC15F2K60S2.h"
 #include "Terminal.h"
 #include <string.h>
+
+#define WT_30M  0x80
+void writeFlash(unsigned int addr,unsigned char dat);
+unsigned char readFlash(unsigned int addr);
+
 typedef struct {
 	const char *CommandName;
 	void (*CommandFunc)();
