@@ -3,8 +3,6 @@
 #### 介绍
 基于单片机的终端系统(目前只支持51单片机)
 
-#### 软件架构
-
 该程序使用迷你SDK编译:
 
 [Gitee链接>>](https://gitee.com/o70078/51_mcu_mini_compiler.git)
@@ -12,6 +10,16 @@
 并使用VSCode编辑代码:
 
 [免费下载地址>>](https://code.visualstudio.com/)
+
+
+
+#### 软件架构
+
+| 目录 | 介绍 |
+| --- | --- |
+| Documents | 文档相关资源 |
+| Devices | 单片机的外设功能驱动 |
+| Commands | Commands.c文件里面一些比较长的命令会单独创建一个文件放到这个目录里. |
 
 #### 安装教程
 

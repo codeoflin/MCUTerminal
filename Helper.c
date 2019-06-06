@@ -59,7 +59,7 @@ hex字符串
 最大长度
 返回值: 解析长度
 */
-int ParseHEX(char * hex,char * buff,int maxlenght)
+int parseHex(char * hex,char * buff,int maxlenght)
 {
     //是否有内容
     char flag_token=0;
@@ -87,4 +87,69 @@ int ParseHEX(char * hex,char * buff,int maxlenght)
     }
     if(flag_token!=0)buffposition++;
     return buffposition;
+}
+
+unsigned int crc16(unsigned char *ptr,unsigned int count)
+{
+    unsigned int  crc;
+    unsigned char i;
+    crc = 0;
+    while (--count >= 0)
+    {
+        crc = crc ^ (unsigned int) *ptr++ << 8;
+        i = 8;
+        do
+        {
+            if (crc & 0x8000)
+            {
+                crc = crc << 1 ^ 0x1021;
+            }
+            else
+            {
+                crc = crc << 1;
+            }
+        } while(--i);
+    }
+    return (crc);
+}
+
+unsigned int checksum16(unsigned char *dataptr,unsigned int len)
+{
+    unsigned long int acc;
+    unsigned int src;
+    unsigned char *octetptr;
+
+    acc = 0;
+    octetptr = (unsigned char*)dataptr;
+    while (len > 1) {
+        src = (*octetptr) << 8;
+        octetptr++;
+        src |= (*octetptr);
+        octetptr++;
+        acc += src;
+        len -= 2;
+    }
+    if (len > 0) {
+        src = (*octetptr) << 8;
+        acc += src;
+    }
+
+    acc = (acc >> 16) + (acc & 0x0000ffffUL);
+    if ((acc & 0xffff0000UL) != 0) acc = (acc >> 16) + (acc & 0x0000ffffUL);
+
+    src = (unsigned int)acc;
+    return ~src;
+}
+
+unsigned char checksum8(unsigned char *pBuffer, unsigned int size)
+{
+    unsigned char cksum=0;
+    int i=0;
+    if ((NULL == pBuffer) || (0 == size))return 0;
+
+    for (i = 0; i < size; i++)
+    {
+        cksum+=pBuffer[i];
+    }
+    return cksum;
 }

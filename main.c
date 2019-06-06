@@ -10,10 +10,9 @@ void main()
 	REN=1;//设定允许接收串口数据
 	EA=0;
 	ES=0;
-	InitTerminal();
+	initTerminal();
 	while(1)
 	{
-		//SendByte(0x30);
-		RunTerminal();
+		runTerminal();
 	}
 }

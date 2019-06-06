@@ -19,18 +19,18 @@ void InitTerminal(void)
 	CursorPosion = 0;
 	ExecCommandFlag = 0;
 	VTControlModeFlag = 0;
-	SendStr(DEFAULT_F_COLOR);
-	SendStr(DEFAULT_B_COLOR);
-	SendStr(CLEARSCREEN);
-	SendStr(CURSORHOME);
+	sendStr(DEFAULT_F_COLOR);
+	sendStr(DEFAULT_B_COLOR);
+	sendStr(CLEARSCREEN);
+	sendStr(CURSORHOME);
 	memset(SerialBuffer,'\0',MAX_SERIAL_BUFFER_SIZE);
 	memset(VTCmdBuffer,'\0',MAX_VT_COMMAND_BUFFER_SIZE);
-	SendLine("*****************************");
-	SendLine2("    Linz Terminal System    ",F_RED,DEFAULT_B_COLOR);
-	SendLine2("        林子终端系统         ",F_BLUE,DEFAULT_B_COLOR);
-	SendLine("*****************************");
-	SendStr("\r\n");
-	SendStr2(PromptBuffer,PROMPT_F_COLOR,DEFAULT_B_COLOR);
+	sendLine("*****************************");
+	sendLine2("    Linz Terminal System    ",F_RED,DEFAULT_B_COLOR);
+	sendLine2("        林子终端系统         ",F_BLUE,DEFAULT_B_COLOR);
+	sendLine("*****************************");
+	sendStr("\r\n");
+	sendStr2(PromptBuffer,PROMPT_F_COLOR,DEFAULT_B_COLOR);
 }
 
 /* VT输入 */
@@ -142,7 +142,7 @@ void VTInput(unsigned char sbuftemp)
 			}
 		}
 	}
-	//SendLine(VTCmdBuffer);
+	//sendLine(VTCmdBuffer);
 	//执行VT命令
 	switch(VTCmdBuffer[VTCursorPosion-1])
 	{
@@ -151,7 +151,7 @@ void VTInput(unsigned char sbuftemp)
 			{
 				CursorPosion--;
 				LastCursorPosion--;
-				SendByte(0x08);
+				sendByte(0x08);
 			}
 			break;
 		case 'C'://光标右移
@@ -159,7 +159,7 @@ void VTInput(unsigned char sbuftemp)
 			{
 				LastCursorPosion++;
 				CursorPosion++;
-				SendStr("\033[C");
+				sendStr("\033[C");
 			}
 			break;
 		case '~'://按键信息
@@ -168,9 +168,9 @@ void VTInput(unsigned char sbuftemp)
 				if(argv[0]==1)//Home
 				{
 					//if(SerialBuffer[CursorPosion] == 0)break;
-					SendStr("\033[");
-					SendUInt(CursorPosion);
-					SendStr("D");
+					sendStr("\033[");
+					sendUInt(CursorPosion);
+					sendStr("D");
 					CursorPosion=0;
 					break;
 				}
@@ -178,11 +178,11 @@ void VTInput(unsigned char sbuftemp)
 				{
 					if(SerialBuffer[CursorPosion] == 0)break;
 					//记录下游标位置,然后内容前移,恢复游标位置
-					SendStr(SAVECURSOR);
+					sendStr(SAVECURSOR);
 					//在内存里输出光标后的内容,此时会覆盖光标里的字,相当于原地删除了
-					SendStr(&SerialBuffer[CursorPosion+1]);
-					SendByte(0x20);//在末尾输出个空格,覆盖末尾的字留下的残影.
-					SendStr(RESTORECURSOR);//恢复光标位置
+					sendStr(&SerialBuffer[CursorPosion+1]);
+					sendByte(0x20);//在末尾输出个空格,覆盖末尾的字留下的残影.
+					sendStr(RESTORECURSOR);//恢复光标位置
 					//在内存里把光标后面的内容全部往前移一格(包括末尾的\0)
 					for (i = CursorPosion; i < strlen(SerialBuffer); i++)SerialBuffer[i]=SerialBuffer[i+1];
 					break;
@@ -190,9 +190,9 @@ void VTInput(unsigned char sbuftemp)
 				if(argv[0]==4)//End
 				{
 					if(SerialBuffer[CursorPosion] == 0)break;
-					SendStr("\033[");
-					SendUInt(strlen(SerialBuffer)-CursorPosion);
-					SendStr("C");
+					sendStr("\033[");
+					sendUInt(strlen(SerialBuffer)-CursorPosion);
+					sendStr("C");
 					CursorPosion=strlen(SerialBuffer);
 					break;
 				}
@@ -225,20 +225,20 @@ void CharacterInput(unsigned char sbuftemp)
 		LastCursorPosion--;
 		CursorPosion--;
 		//首先左移一下游标,然后记录下位置
-		SendByte(0x08);
-		SendStr(SAVECURSOR);
+		sendByte(0x08);
+		sendStr(SAVECURSOR);
 		//在内存里输出光标后的内容,此时会覆盖光标里的字,相当于原地删除了
-		SendStr(&SerialBuffer[CursorPosion+1]);
-		SendByte(0x20);//在末尾输出个空格,覆盖末尾的字留下的残影.
-		SendStr(RESTORECURSOR);//恢复光标位置
+		sendStr(&SerialBuffer[CursorPosion+1]);
+		sendByte(0x20);//在末尾输出个空格,覆盖末尾的字留下的残影.
+		sendStr(RESTORECURSOR);//恢复光标位置
 		//在内存里把光标后面的内容全部往前移一格(包括末尾的\0)
 		for (i = CursorPosion; i < strlen(SerialBuffer); i++)SerialBuffer[i]=SerialBuffer[i+1];
 		break;
 	case '\r':
 	case '\n':
 	case '\0':
-		SendByte('\r');
-		SendByte('\n');
+		sendByte('\r');
+		sendByte('\n');
 		ExecCommandFlag = 1;
 		break;
 	case '\t':
@@ -250,8 +250,8 @@ void CharacterInput(unsigned char sbuftemp)
 		{
 			LastCursorPosion = CursorPosion = 0;
 			memset(SerialBuffer,'\0',MAX_SERIAL_BUFFER_SIZE);
-			SendStr2("\r\n 警告:您输入的内容过长!\r\n\r\n",F_RED,DEFAULT_B_COLOR);
-			SendStr2(PromptBuffer,PROMPT_F_COLOR,DEFAULT_B_COLOR);
+			sendStr2("\r\n 警告:您输入的内容过长!\r\n\r\n",F_RED,DEFAULT_B_COLOR);
+			sendStr2(PromptBuffer,PROMPT_F_COLOR,DEFAULT_B_COLOR);
 			break;
 		}
 		
@@ -383,12 +383,12 @@ void ExecCommand(char *buf)
 		}
 		if(Command == 0)
 		{
-			//SendUInt(Counter);
-			//SendLine("\r\n");
-			SendStr("'");
-			SendStr2(argv[0],F_RED,DEFAULT_B_COLOR);
-			SendStr("' 不是内部或外部命令，也不是可运行的程序.如果需要帮助请输入");
-			SendLine2("'help'\r\n",F_YELLOW,DEFAULT_B_COLOR); 
+			//sendUInt(Counter);
+			//sendLine("\r\n");
+			sendStr("'");
+			sendStr2(argv[0],F_RED,DEFAULT_B_COLOR);
+			sendStr("' 不是内部或外部命令，也不是可运行的程序.如果需要帮助请输入");
+			sendLine2("'help'\r\n",F_YELLOW,DEFAULT_B_COLOR); 
 		}
 		else
 		{
@@ -416,20 +416,20 @@ void RunTerminal(void)
 	{
 		GapCounter=0;
 		WaitingDisplayFlag=0; 
-		SendStr(SAVECURSOR);
-		SendStr(&SerialBuffer[LastCursorPosion]);
-		SendStr(RESTORECURSOR);
+		sendStr(SAVECURSOR);
+		sendStr(&SerialBuffer[LastCursorPosion]);
+		sendStr(RESTORECURSOR);
 		if(LastCursorPosion>CursorPosion)
 		{
-			SendStr("\033[");
-			SendUInt(LastCursorPosion-CursorPosion);
-			SendStr("D");
+			sendStr("\033[");
+			sendUInt(LastCursorPosion-CursorPosion);
+			sendStr("D");
 		}
 		else if(LastCursorPosion<CursorPosion)
 		{
-			SendStr("\033[");
-			SendUInt(CursorPosion-LastCursorPosion);
-			SendStr("C");
+			sendStr("\033[");
+			sendUInt(CursorPosion-LastCursorPosion);
+			sendStr("C");
 		}
 		// */
 		LastCursorPosion=CursorPosion;
@@ -438,7 +438,7 @@ void RunTerminal(void)
 	if(ExecCommandFlag)
 	{
 		ExecCommand(SerialBuffer);
-		SendStr2(PromptBuffer,PROMPT_F_COLOR,DEFAULT_B_COLOR);
+		sendStr2(PromptBuffer,PROMPT_F_COLOR,DEFAULT_B_COLOR);
 		memset(SerialBuffer,'\0',MAX_SERIAL_BUFFER_SIZE);
 		CursorPosion = 0;
 		VTCursorPosion = 0;

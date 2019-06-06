@@ -41,7 +41,7 @@ if not exist %ProjectName%.hex goto End
 del %ProjectName%
 del *.__i
 del *.M51
-::del *.obj
+del /S *.obj
 del *.lnp
 del *.lst
 @echo [编译结束]

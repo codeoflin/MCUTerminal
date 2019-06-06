@@ -5,5 +5,8 @@
 void toLower(const char* str);
 long int toLong(unsigned char *line);
 int index(char *str,char c);
-int ParseHEX(char * hex,char * buff,int maxlenght);
+int parseHex(char * hex,char * buff,int maxlenght);
+unsigned int crc16(unsigned char *ptr,unsigned int count);
+unsigned int checksum16(unsigned char *ptr,unsigned int count);
+unsigned char checksum8(unsigned char *pBuffer, unsigned int size);
 #endif
