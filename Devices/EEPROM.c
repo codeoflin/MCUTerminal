@@ -1,4 +1,4 @@
-#include "Flash.h"
+#include "EEPROM.h"
 unsigned char readFlash(unsigned int addr)
 {
 	return *(char code *)(addr);

@@ -1,6 +1,6 @@
 #ifndef  __XMODEM_H__
 #define  __XMODEM_H__
-#include "../Devices/Flash.h"
+#include "../Devices/EEPROM.h"
 #include "../Devices/Uart.h"
 #include "../Commands.h"
 

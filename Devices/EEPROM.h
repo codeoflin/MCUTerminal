@@ -1,5 +1,5 @@
-#ifndef  __FLASH_H__
-#define  __FLASH_H__
+#ifndef  __EEPROM_H__
+#define  __EEPROM_H__
 #include "STC.h"
 #include <stdio.h>
 #include <string.h>

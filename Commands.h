@@ -4,6 +4,8 @@
 #include "Terminal.h"
 #include "Devices/Flash.h"
 #include "Commonds/xmodem.h"
+#include "Commonds/Run51.h"
+#include "Commonds/Flash.h"
 #include <string.h>
 
 typedef struct {
@@ -24,8 +26,6 @@ void reboot();//重启
 void setBit();//设置GPIO引脚
 void resetBit();//清零GPIO引脚
 void getBit();//获取GPIO引脚状态
-//flash操作
-void flash();
 
 // */
 
