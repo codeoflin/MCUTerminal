@@ -16,7 +16,7 @@ void xmodem()
     //包号
     unsigned char packno=0;
     //远程crc,本地crc
-    unsigned int r_crc=0,l_crc=0;
+    unsigned char r_crc=0,l_crc=0;
     //包长
     int packlen=128;
 	switch(argc)
@@ -62,11 +62,17 @@ void xmodem()
                     packlen=head==SOH?128:1024;
                     packno=readByte();
                     readByte();//包号反码,用于验证
-                    for (i = 0; i < packlen; i++)buff[i]=readByte();                    
-                    l_crc=checksum8(buff,packlen);
-                    r_crc=readByte();
+                    l_crc=0;
+                    for (i = 0; i < packlen; i++)
+                    {
+                        buff[i]=readByte();
+                        l_crc+=buff[i];//计算校验和
+                    }
+                    //l_crc=checksum8(buff,packlen);
+                    r_crc=readByte();//读取远端校验和
                     if (l_crc==r_crc)
                     {
+                        //循环写入
                         for (i = 0; i < packlen; i++)
                         {
                             if(addr+i>=65536)
