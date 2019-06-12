@@ -1,20 +1,21 @@
 #include "Run51.h"
 
 //程序计数器
-unsigned int PC;
+unsigned int xdata PC;
 //片内RAM直接寻址区 00~7F 虚拟寄存器 80~FF 有些物理寄存器无法映射给虚拟机用,此处虚拟一套给它们
-unsigned char MEM[0x100];
+unsigned char xdata MEM[0x100];
 //片内RAM间接寻址区 00~FF 此区域共256字节,前面的128字节是MEM,后面128字节是独立的
-unsigned char IDATA[0x80];
+unsigned char xdata IDATA[0x80];
 //片外RAM扩展内存 这里给4KB吧
-unsigned char XDATA[0x1000];
+unsigned char xdata XDATA[0x1000];
 //虚拟机内FLASH起点,相对物理机FLASH偏移位置
-long int FlashOffset;
+long int xdata FlashOffset;
 //程序状态字
 unsigned char VPSW;
 //VACC
 unsigned char VACC;
-
+//
+unsigned char VSBUF;
 //片内FLASH(MOVC指令访问用)
 unsigned char CODE(unsigned int addr)
 {
@@ -220,7 +221,6 @@ void run(long int addr,long int len)
 	unsigned char bit1 = 0;
 	char run = 1;
 	unsigned int uitemp = 0;
-
 	FlashOffset = addr;
 	//初始化寄存器
 	PC = 0;
@@ -237,7 +237,17 @@ void run(long int addr,long int len)
 		udat1 = VACC;
 		VPSW &= 0xFE;
 		for (; udat1 > 0; udat1 = udat1 >> 1)if (udat1 & 1)VPSW ^= 1;
-
+		if(RI!=0)
+		{
+			VSBUF=SBUF;
+			RI=0;
+			if(VSBUF=='c'||VSBUF=='C')
+			{
+				sendLine("强制退出!");
+				sendLine(NULL);
+				run=0;
+			}
+		}
 		switch (mcode)
 		{
 		case ASM_MOV_R7_A://FF
@@ -321,9 +331,11 @@ void run(long int addr,long int len)
 			VACC = (udat1 & 0xF0) + (udat2 & 0xF);
 			writeByteIDATA(readREG_Rx(mcode - ASM_XCHD_A_XR0), (udat2 & 0xF0) + (udat1 & 0xF));
 			break;
-		case ASM_DJNZ_DIRECT_REL://D5 X
-			direct1 = readOne() - 1;
-			writeByteDATA(direct1, readByteDATA(direct1));
+		case ASM_DJNZ_DIRECT_REL://D5
+			direct1 = readOne();
+			dat1 = readOne();
+			udat1 = readByteDATA(direct1);
+			writeByteDATA(direct1, udat1 - 1);
 			if (udat1 == 0)break;
 			PC += dat1;
 			break;
@@ -519,8 +531,6 @@ void run(long int addr,long int len)
 			VACC = udat1 / udat2;
 			writeByteDATA(REG_B, udat1 % udat2);
 			break;
-
-
 		case ASM_CJNE_R7_DATA_REL://8F X
 		case ASM_CJNE_R6_DATA_REL://8E X
 		case ASM_CJNE_R5_DATA_REL://8D X
@@ -882,6 +892,17 @@ void run(long int addr,long int len)
 			PC = (direct1 << 8) + direct2;
 			break;
 		case ASM_NOP://00
+			if(readREG_Rx(4)!='L')break;
+			if(readREG_Rx(5)!='i')break;
+			if(readREG_Rx(6)!='n')break;
+			if(readREG_Rx(7)!='z')break;
+			//如果R4~R7的内容为'linz',则进入特殊模式
+			if(ACC==1)
+			{
+				sendLine("程序退出!");
+				sendLine(NULL);
+				run=0;
+			}
 			break;
 
 		case ASM_AJMP_111_ADDR11://E1
@@ -910,9 +931,9 @@ void run(long int addr,long int len)
 			PC = ((0xF800 & PC) + ((mcode & 0xE0) << 3) + direct1);
 			break;
 		default:
-			//sendLine("不认识的指令!");
-			//sendUInt(mcode);
-			//sendLine(NULL);
+			sendLine("不认识的指令!");
+			sendUInt(mcode);
+			sendLine(NULL);
 			run = 0;
 			break;
 		}//End Switch

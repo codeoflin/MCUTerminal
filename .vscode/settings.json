@@ -14,5 +14,7 @@
         "helper.h": "c",
         "eeprom.h": "c"
     },
-    "C51.binDir": "D:\\51_mcu_mini_compiler\\BIN"
+    "C51.binDir": "D:\\51_mcu_mini_compiler\\BIN",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": false
 }
