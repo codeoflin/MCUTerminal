@@ -6,6 +6,7 @@
 #include "../Commands.h"
 
 void run51();
+unsigned char readREG_Rx(unsigned char id);
 
 //指令机器码
 #define ASM_MOV_R7_A					  0xFF				//
@@ -275,4 +276,6 @@ void run51();
 
 //位寻址
 #define BIT_CY									0xD7
+
+
 #endif

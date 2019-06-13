@@ -19,7 +19,7 @@ unsigned char VSBUF;
 //片内FLASH(MOVC指令访问用)
 unsigned char CODE(unsigned int addr)
 {
-    return readFlash(FlashOffset+PC);
+	return readFlash(FlashOffset+PC);
 }
 
 /* CPU微代码 根据PC寄存器读取1字节FLASH,然后PC寄存器+1 */
@@ -41,6 +41,9 @@ void writeByteDATA(unsigned char addr, unsigned char dat)
 	switch (addr)
 	{
 	case REG_P0:
+		//sendStr("写入P0=");
+		//sendUInt(dat);
+		//sendLine(NULL);
 		P0 = dat;
 		break;
 	case REG_P1:
@@ -103,6 +106,7 @@ void writeByteIDATA(unsigned char addr, unsigned char dat)
 {
 	if (addr < 0x80)
 	{
+		
 		MEM[addr] = dat;
 		return;
 	}
@@ -205,7 +209,6 @@ void subFromACC(unsigned char dat, unsigned char subcy)
 /* 运行 */
 void run(long int addr,long int len)
 {
-
 	//机器码
 	unsigned char mcode = 0;
 	unsigned char direct1 = 0;
@@ -219,8 +222,9 @@ void run(long int addr,long int len)
 	unsigned char udat5 = 0;
 	unsigned char udat6 = 0;
 	unsigned char bit1 = 0;
-	char run = 1;
+	char flag_run = 1;
 	unsigned int uitemp = 0;
+	long int i=0;
 	FlashOffset = addr;
 	//初始化寄存器
 	PC = 0;
@@ -230,7 +234,7 @@ void run(long int addr,long int len)
 	writeByteDATA(REG_DPH, 0);
 	writeByteDATA(REG_SP, 7);//堆栈指针初始化
 
-	while (run)
+	while (flag_run)
 	{
 		mcode = readOne();
 		//这几行是为了判断A寄存器里1的数量是单还是双
@@ -244,9 +248,40 @@ void run(long int addr,long int len)
 			if(VSBUF=='c'||VSBUF=='C')
 			{
 				sendLine("强制退出!");
-				sendLine(NULL);
-				run=0;
+				flag_run=0;
 			}
+		}
+		if(mcode!=ASM_DJNZ_R0_REL&&
+			mcode!=ASM_MOV_XR0_A&&1==2
+		)
+		// */
+		{
+			sendStr("mcode=");
+			sendHexByte(mcode);
+			sendStr(" ACC=");
+			sendHexByte(VACC);
+			sendStr(" PSW=");
+			sendHexByte(VPSW);
+			sendStr(" R0~7=");
+			sendHexByte(readREG_Rx(0));
+			sendStr(" ");
+			sendHexByte(readREG_Rx(1));
+			sendStr(" ");
+			sendHexByte(readREG_Rx(2));
+			sendStr(" ");
+			sendHexByte(readREG_Rx(3));
+			sendStr(" ");
+			sendHexByte(readREG_Rx(4));
+			sendStr(" ");
+			sendHexByte(readREG_Rx(5));
+			sendStr(" ");
+			sendHexByte(readREG_Rx(6));
+			sendStr(" ");
+			sendHexByte(readREG_Rx(7));
+			sendStr(" SP=");
+			sendHexByte(readByteDATA(REG_SP));
+			sendLine(NULL);
+			//for (i = 0x4FFF; i>0; i--)i+=0;
 		}
 		switch (mcode)
 		{
@@ -260,8 +295,8 @@ void run(long int addr,long int len)
 		case ASM_MOV_R0_A://F8
 			writeREG_Rx(mcode - ASM_MOV_R0_A, VACC);
 			break;
-		case ASM_MOV_XR1_A://F7 X
-		case ASM_MOV_XR0_A://F6 X
+		case ASM_MOV_XR1_A://F7
+		case ASM_MOV_XR0_A://F6
 			writeByteIDATA(readREG_Rx(mcode - ASM_MOV_XR0_A), VACC);
 			break;
 		case ASM_MOV_DIRECT_A://F5
@@ -319,8 +354,8 @@ void run(long int addr,long int len)
 		case ASM_DJNZ_R1_REL://D9
 		case ASM_DJNZ_R0_REL://D8
 			udat1 = readREG_Rx(mcode - ASM_DJNZ_R0_REL) - 1;
-			writeREG_Rx(mcode - ASM_DJNZ_R0_REL, udat1);
 			dat1 = readOne();
+			writeREG_Rx(mcode - ASM_DJNZ_R0_REL, udat1);
 			if (udat1 == 0)break;
 			PC += dat1;
 			break;
@@ -886,7 +921,7 @@ void run(long int addr,long int len)
 		case ASM_RR_A://03 X
 			VACC = VACC >> 1;
 			break;
-		case ASM_LJMP_ADDR16:
+		case ASM_LJMP_ADDR16://02
 			direct1 = readOne();
 			direct2 = readOne();
 			PC = (direct1 << 8) + direct2;
@@ -901,10 +936,9 @@ void run(long int addr,long int len)
 			{
 				sendLine("程序退出!");
 				sendLine(NULL);
-				run=0;
+				flag_run=0;
 			}
 			break;
-
 		case ASM_AJMP_111_ADDR11://E1
 		case ASM_AJMP_110_ADDR11://C1
 		case ASM_AJMP_101_ADDR11://A1
@@ -934,7 +968,7 @@ void run(long int addr,long int len)
 			sendLine("不认识的指令!");
 			sendUInt(mcode);
 			sendLine(NULL);
-			run = 0;
+			flag_run = 0;
 			break;
 		}//End Switch
     }//End While
@@ -948,18 +982,23 @@ void run51()
 	long int addr=0,len=0;
 	int i=0;
 	//输入命令有错误的时候用这个提示用户输入正确的命令
-	char* example="run51 0x8000 0x400";
+	char* example="run51 0x8000 0x100\r\n     run51 0x8000";
 	switch(argc)
 	{
+	case 2:
+		addr=toLong(argv[1]);//解析地址
+		len=0x100;
+		run(addr,len);
+		break;
 	case 3:
 		addr=toLong(argv[1]);//解析地址
-        len=toLong(argv[2]);//解析长度
-        if(addr<0||len<=0)
-        {
-		    outputError("请输入正确的起始地址与长度!",example);
-            break;
-        }
-        run(addr,len);
+		len=toLong(argv[2]);//解析长度
+		if(addr<0||len<=0)
+		{
+			outputError("请输入正确的起始地址与长度!",example);
+			break;
+		}
+		run(addr,len);
 		break;
 	default:
 		outputError("参数数量不对!",example);
