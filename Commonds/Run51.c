@@ -1,7 +1,7 @@
 #include "Run51.h"
 
 //程序计数器
-unsigned int xdata PC;
+unsigned int xdata PC=0;
 //片内RAM直接寻址区 00~7F 虚拟寄存器 80~FF 有些物理寄存器无法映射给虚拟机用,此处虚拟一套给它们
 unsigned char xdata MEM[0x100];
 //片内RAM间接寻址区 00~FF 此区域共256字节,前面的128字节是MEM,后面128字节是独立的
@@ -11,11 +11,11 @@ unsigned char xdata XDATA[0x1000];
 //虚拟机内FLASH起点,相对物理机FLASH偏移位置
 long int xdata FlashOffset;
 //程序状态字
-unsigned char VPSW;
+unsigned char VPSW=0;
 //VACC
-unsigned char VACC;
+unsigned char VACC=0;
 //
-unsigned char VSBUF;
+unsigned char VSBUF=0;
 //片内FLASH(MOVC指令访问用)
 unsigned char CODE(unsigned int addr)
 {
@@ -104,10 +104,14 @@ unsigned char readByteDATA(unsigned char addr)
 /* CPU微代码 写字节寻址的MEM */
 void writeByteIDATA(unsigned char addr, unsigned char dat)
 {
+	sendStr("R0=");
+	sendHexByte(readREG_Rx(0));
 	if (addr < 0x80)
 	{
-		
 		MEM[addr] = dat;
+		sendStr(" R0=");
+		sendHexByte(readREG_Rx(0));
+		sendLine(NULL);
 		return;
 	}
 	IDATA[addr - 0x80] = dat;
@@ -251,8 +255,7 @@ void run(long int addr,long int len)
 				flag_run=0;
 			}
 		}
-		if(mcode!=ASM_DJNZ_R0_REL&&
-			mcode!=ASM_MOV_XR0_A&&1==2
+		if(1==1
 		)
 		// */
 		{
