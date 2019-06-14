@@ -182,12 +182,12 @@ void addToACC(unsigned char dat, unsigned char addcy)
 		VACC += 1;
 		if (VACC < acc)VPSW |= 0x80 | 0x02;//CY,进位,OV带符号进位
 		if ((VACC & 0xF) == 0) VPSW |= 0x40;//AC,低4位进位
-		if ((VACC & 0x7F) == 0) VPSW |= 0x02;//OV,OV带符号进位
+		if (((VACC & 0x7F) == 0) ^ (VACC < acc)) VPSW |= 0x02;//OV,OV带符号进位
 	}
 	VACC += dat;
 	if (VACC < acc)VPSW |= 0x80 | 0x02;//CY,进位,OV带符号进位
 	if ((VACC & 0xF) < (acc & 0xF)) VPSW |= 0x40;//AC,低4位进位
-	if ((VACC & 0x7F) < (acc & 0x7F)) VPSW |= 0x02;//OV,OV带符号进位
+	if (((VACC & 0x7F) < (acc & 0x7F)) ^ (VACC < acc)) VPSW |= 0x02;//OV,OV带符号进位
 }
 
 /* CPU微代码 累加器减运算 */
@@ -199,15 +199,15 @@ void subFromACC(unsigned char dat, unsigned char subcy)
 	if (subcy && oldcy)
 	{
 		VACC--;
-		if (VACC > acc)VPSW |= 0x80 | 0x02;//CY,借位,OV带符号借位
+		if (VACC > acc)VPSW |= 0x80 | 0x02;//CY,借位
 		if ((VACC & 0xF) == 0xF) VPSW |= 0x40;//AC,低4位进位
-		if ((VACC & 0x7F) == 0xF) VPSW |= 0x02;//OV,OV带符号进位
+		if (((VACC & 0x7F) == 0xF) ^ (VACC > acc)) VPSW |= 0x02;//OV,OV带符号进位
 		acc = VACC;
 	}
 	VACC -= dat;
-	if (VACC > acc)VPSW |= 0x80 | 0x02;//CY,借位,OV带符号借位
+	if (VACC > acc)VPSW |= 0x80;//CY,借位
 	if ((VACC & 0xF) > (acc & 0xF)) VPSW |= 0x40;//AC,低4位借位
-	if ((VACC & 0x7F) > (acc & 0x7F)) VPSW |= 0x02;//OV,OV带符号借位
+	if (((VACC & 0x7F) > (acc & 0x7F)) ^ (VACC > acc)) VPSW |= 0x02;//OV,OV带符号借位
 }
 
 /* 运行 */
