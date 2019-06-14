@@ -214,7 +214,7 @@ void subFromACC(unsigned char dat, unsigned char subcy)
 void run(long int addr,long int len)
 {
 	//机器码
-	unsigned char mcode = 0;
+	MACHINECODE mcode = 0;
 	unsigned char direct1 = 0;
 	unsigned char direct2 = 0;
 	char dat1 = 0;
