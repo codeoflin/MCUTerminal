@@ -255,7 +255,7 @@ void run(long int addr,long int len)
 				flag_run=0;
 			}
 		}
-		if(1==1
+		if(1!=1
 		)
 		// */
 		{
@@ -687,14 +687,14 @@ void run(long int addr,long int len)
 			udat2 = readOne();
 			writeByteDATA(direct1, udat1 ^ udat2);
 			break;
-		case ASM_JNZ_REL://61 X
-			if (!VACC) break;
+		case ASM_JNZ_REL://61
 			dat1 = readOne();
+			if (!VACC) break;
 			PC += dat1;
 			break;
-		case ASM_JZ_REL://60 X
-			if (VACC) break;
+		case ASM_JZ_REL://60
 			dat1 = readOne();
+			if (VACC) break;
 			PC += dat1;
 			break;
 		case ASM_ANL_A_R7://5F X
@@ -854,9 +854,9 @@ void run(long int addr,long int len)
 			break;
 		case ASM_JB_BIT_REL://20 X
 			direct1 = readOne();
+			dat1 = readOne();
 			bit1 = readBit(direct1);
 			if (!bit1)break;
-			dat1 = readOne();
 			PC += dat1;
 			break;
 		case ASM_DEC_R7://1F X
@@ -900,10 +900,10 @@ void run(long int addr,long int len)
 			break;
 		case ASM_JBC_BIT_REL://10 X
 			direct1 = readOne();
+			dat1 = readOne();
 			bit1 = readBit(direct1);
 			if (!bit1)break;
 			writeBit(direct1, 0);
-			dat1 = readOne();
 			PC += dat1;
 			break;
 		case ASM_INC_R7://0F X
