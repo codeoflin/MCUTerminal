@@ -4,7 +4,6 @@
 #include "../Devices/EEPROM.h"
 #include "../Devices/Uart.h"
 #include "../Commands.h"
-
 void run51();
 unsigned char readREG_Rx(unsigned char id);
 

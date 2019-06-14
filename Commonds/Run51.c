@@ -104,14 +104,14 @@ unsigned char readByteDATA(unsigned char addr)
 /* CPU微代码 写字节寻址的MEM */
 void writeByteIDATA(unsigned char addr, unsigned char dat)
 {
-	sendStr("R0=");
-	sendHexByte(readREG_Rx(0));
+	//sendStr("R0=");
+	//sendHexByte(readREG_Rx(0));
 	if (addr < 0x80)
 	{
 		MEM[addr] = dat;
-		sendStr(" R0=");
-		sendHexByte(readREG_Rx(0));
-		sendLine(NULL);
+		//sendStr(" R0=");
+		//sendHexByte(readREG_Rx(0));
+		//sendLine(NULL);
 		return;
 	}
 	IDATA[addr - 0x80] = dat;
@@ -283,6 +283,14 @@ void run(long int addr,long int len)
 			sendHexByte(readREG_Rx(7));
 			sendStr(" SP=");
 			sendHexByte(readByteDATA(REG_SP));
+			sendStr(" P0=");
+			sendHexByte(readByteDATA(REG_P0));
+			sendStr(" P1=");
+			sendHexByte(readByteDATA(REG_P1));
+			sendStr(" P2=");
+			sendHexByte(readByteDATA(REG_P2));
+			sendStr(" P3=");
+			sendHexByte(readByteDATA(REG_P3));
 			sendLine(NULL);
 			//for (i = 0x4FFF; i>0; i--)i+=0;
 		}
@@ -771,12 +779,12 @@ void run(long int addr,long int len)
 		case ASM_ADDC_A_R2://3A X
 		case ASM_ADDC_A_R1://39 X
 		case ASM_ADDC_A_R0://38 X
-			udat1 = readREG_Rx(mcode - ASM_ADD_A_R0);
+			udat1 = readREG_Rx(mcode - ASM_ADDC_A_R0);
 			addToACC(udat1, 1);
 			break;
 		case ASM_ADDC_A_XR1://37 X
 		case ASM_ADDC_A_XR0://36 X
-			direct1 = readREG_Rx(mcode - ASM_ADD_A_XR0);
+			direct1 = readREG_Rx(mcode - ASM_ADDC_A_XR0);
 			udat1 = readByteDATA(direct1);
 			addToACC(udat1, 1);
 			break;
@@ -834,8 +842,10 @@ void run(long int addr,long int len)
 			udat1 = readOne();
 			addToACC(udat1, 0);
 			break;
-		case ASM_RL_A://23 X
-			VACC = VACC << 1;
+		case ASM_RL_A://23
+			udat1=VACC<<1;
+			if(VACC>=0x80)udat1++;
+			VACC=udat1;
 			break;
 		case ASM_RET://22
 			direct1 = readByteDATA(REG_SP);
@@ -907,13 +917,13 @@ void run(long int addr,long int len)
 			udat1 = readREG_Rx(mcode - ASM_INC_R0);
 			writeREG_Rx(mcode - ASM_INC_R0, udat1 + 1);
 			break;
-		case ASM_INC_XR1://7 X
-		case ASM_INC_XR0://6 X
+		case ASM_INC_XR1://07 X
+		case ASM_INC_XR0://06 X
 			direct1 = readREG_Rx(mcode - ASM_INC_XR0);
 			udat1 = readByteIDATA(direct1);
 			writeByteIDATA(direct1, udat1 + 1);
 			break;
-		case ASM_INC_DIRECT://5
+		case ASM_INC_DIRECT://05
 			direct1 = readOne();
 			udat1 = readByteDATA(direct1);
 			writeByteDATA(direct1, udat1 + 1);
@@ -921,8 +931,10 @@ void run(long int addr,long int len)
 		case ASM_INC_A://04
 			VACC++;
 			break;
-		case ASM_RR_A://03 X
-			VACC = VACC >> 1;
+		case ASM_RR_A://03
+			udat1=VACC>>1;
+			if(VACC&1)udat1+=0x80;
+			VACC=udat1;
 			break;
 		case ASM_LJMP_ADDR16://02
 			direct1 = readOne();
