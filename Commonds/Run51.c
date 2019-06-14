@@ -730,8 +730,8 @@ void run(long int addr,long int len)
 			writeByteDATA(direct1, udat1 & udat2);
 			break;
 		case ASM_JNC_REL://50 X
-			if (VPSW & 0x80) break;
 			dat1 = readOne();
+			if (VPSW & 0x80) break;
 			PC += dat1;
 			break;
 		case ASM_ORL_A_R7://4F X
@@ -766,9 +766,9 @@ void run(long int addr,long int len)
 			udat2 = readOne();
 			writeByteDATA(direct1, udat1 | udat2);
 			break;
-		case ASM_JC_REL://40 X
-			if (!(VPSW & 0x80)) break;
+		case ASM_JC_REL://40
 			dat1 = readOne();
+			if (!(VPSW & 0x80)) break;
 			PC += dat1;
 			break;
 		case ASM_ADDC_A_R7://3F X
