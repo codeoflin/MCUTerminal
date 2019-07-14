@@ -760,7 +760,7 @@ void run(long int addr,long int len)
 			udat1 = readOne();
 			VACC |= udat1;
 			break;
-		case ASM_ORL_DIRECT_DATA://43 X
+		case ASM_ORL_DIRECT_DATA://43
 			direct1 = readOne();
 			udat1 = readByteDATA(direct1);
 			udat2 = readOne();
