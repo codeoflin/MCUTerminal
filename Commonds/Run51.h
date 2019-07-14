@@ -279,5 +279,5 @@ typedef enum {
 //位寻址
 #define BIT_CY									0xD7
 
-
+#define SIZE_XDATA							0x1000
 #endif

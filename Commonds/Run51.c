@@ -7,7 +7,7 @@ unsigned char xdata MEM[0x100];
 //片内RAM间接寻址区 00~FF 此区域共256字节,前面的128字节是MEM,后面128字节是独立的
 unsigned char xdata IDATA[0x80];
 //片外RAM扩展内存 这里给4KB吧
-unsigned char xdata XDATA[0x1000];
+unsigned char xdata XDATA[SIZE_XDATA];
 //虚拟机内FLASH起点,相对物理机FLASH偏移位置
 long int xdata FlashOffset;
 //程序状态字
@@ -19,7 +19,7 @@ unsigned char VSBUF=0;
 //片内FLASH(MOVC指令访问用)
 unsigned char CODE(unsigned int addr)
 {
-	return readFlash(FlashOffset+PC);
+	return readFlash(FlashOffset+addr);
 }
 
 /* CPU微代码 根据PC寄存器读取1字节FLASH,然后PC寄存器+1 */
@@ -232,6 +232,8 @@ void run(long int addr,long int len)
 	//初始化寄存器
 	PC = 0;
 	VACC = 0;
+	for(i=0;i<0x100;i++)MEM[i]=0;
+	for(i=0;i<SIZE_XDATA;i++)XDATA[i]=0;
 	writeByteDATA(REG_B, 0);
 	writeByteDATA(REG_DPL, 0);
 	writeByteDATA(REG_DPH, 0);
@@ -291,6 +293,10 @@ void run(long int addr,long int len)
 			sendHexByte(readByteDATA(REG_P2));
 			sendStr(" P3=");
 			sendHexByte(readByteDATA(REG_P3));
+
+			sendStr(" DPTR=");
+			sendHexByte(readByteDATA(REG_DPH));
+			sendHexByte(readByteDATA(REG_DPL));
 			sendLine(NULL);
 			//for (i = 0x4FFF; i>0; i--)i+=0;
 		}
@@ -351,7 +357,7 @@ void run(long int addr,long int len)
 		case ASM_MOVX_A_XR0://E2
 			VACC = XDATA[readREG_Rx(mcode)];
 			break;
-		case ASM_MOVX_A_XDPTR://E0 X
+		case ASM_MOVX_A_XDPTR://E0
 			uitemp = readByteDATA(REG_DPH) << 8;
 			uitemp = uitemp + readByteDATA(REG_DPL);
 			VACC = XDATA[uitemp];
@@ -493,9 +499,9 @@ void run(long int addr,long int len)
 			VACC = uitemp;
 			writeByteDATA(REG_B, uitemp >> 8);
 			break;
-		case ASM_INC_DPTR://A3 X
+		case ASM_INC_DPTR://A3
 			uitemp = readByteDATA(REG_DPH) << 8;
-			uitemp = uitemp + readByteDATA(REG_DPL);
+			uitemp += readByteDATA(REG_DPL);
 			uitemp += 1;
 			writeByteDATA(REG_DPL, uitemp);
 			writeByteDATA(REG_DPH, uitemp >> 8);
