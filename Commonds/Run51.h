@@ -183,7 +183,8 @@ typedef enum {
 	ASM_ORL_A_XR0		  		=0x46,				//
 	ASM_ORL_A_DIRECT			=0x45,				//
 	ASM_ORL_A_DATA				=0x44,				//
-	ASM_ORL_DIRECT_DATA		=0x42,				//
+	ASM_ORL_DIRECT_DATA		=0x43,				//
+	ASM_ORL_DIRECT_A			=0x42,				//
 	ASM_JC_REL			  		=0x40,				//
 	ASM_ADDC_A_R7		  		=0x3F,				//
 	ASM_ADDC_A_R6		  		=0x3E,				//

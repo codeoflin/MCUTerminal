@@ -104,14 +104,9 @@ unsigned char readByteDATA(unsigned char addr)
 /* CPU微代码 写字节寻址的MEM */
 void writeByteIDATA(unsigned char addr, unsigned char dat)
 {
-	//sendStr("R0=");
-	//sendHexByte(readREG_Rx(0));
 	if (addr < 0x80)
 	{
 		MEM[addr] = dat;
-		//sendStr(" R0=");
-		//sendHexByte(readREG_Rx(0));
-		//sendLine(NULL);
 		return;
 	}
 	IDATA[addr - 0x80] = dat;
@@ -124,15 +119,19 @@ unsigned char readByteIDATA(unsigned char addr)
 }
 
 /* CPU微代码 读R系列寄存器 */
-unsigned char readREG_Rx(unsigned char id)
+unsigned char readREG_Rx(unsigned char mcode)
 {
-	return readByteDATA((VPSW & 0x18) + id);
+	mcode = mcode & 0xF;
+	if (mcode < 8)mcode = mcode - 6;
+	return readByteDATA((VPSW & 0x18) + (mcode & 7));
 }
 
 /* CPU微代码 写R系列寄存器 */
-void writeREG_Rx(unsigned char id, unsigned char dat)
+void writeREG_Rx(unsigned char mcode, unsigned char dat)
 {
-	writeByteDATA((VPSW & 0x18) + id, dat);
+	mcode = mcode & 0xF;
+	if (mcode < 8)mcode = mcode - 6;
+	writeByteDATA((VPSW & 0x18) + (mcode & 7), dat);
 }
 
 /* CPU微代码 立即数入栈 */
@@ -255,6 +254,7 @@ void run(long int addr,long int len)
 				flag_run=0;
 			}
 		}
+		/*
 		if(1!=1
 		)
 		// */
@@ -266,21 +266,21 @@ void run(long int addr,long int len)
 			sendStr(" PSW=");
 			sendHexByte(VPSW);
 			sendStr(" R0~7=");
-			sendHexByte(readREG_Rx(0));
+			sendHexByte(readREG_Rx(8));
 			sendStr(" ");
-			sendHexByte(readREG_Rx(1));
+			sendHexByte(readREG_Rx(9));
 			sendStr(" ");
-			sendHexByte(readREG_Rx(2));
+			sendHexByte(readREG_Rx(10));
 			sendStr(" ");
-			sendHexByte(readREG_Rx(3));
+			sendHexByte(readREG_Rx(11));
 			sendStr(" ");
-			sendHexByte(readREG_Rx(4));
+			sendHexByte(readREG_Rx(12));
 			sendStr(" ");
-			sendHexByte(readREG_Rx(5));
+			sendHexByte(readREG_Rx(13));
 			sendStr(" ");
-			sendHexByte(readREG_Rx(6));
+			sendHexByte(readREG_Rx(14));
 			sendStr(" ");
-			sendHexByte(readREG_Rx(7));
+			sendHexByte(readREG_Rx(15));
 			sendStr(" SP=");
 			sendHexByte(readByteDATA(REG_SP));
 			sendStr(" P0=");
@@ -304,11 +304,11 @@ void run(long int addr,long int len)
 		case ASM_MOV_R2_A://FA
 		case ASM_MOV_R1_A://F9
 		case ASM_MOV_R0_A://F8
-			writeREG_Rx(mcode - ASM_MOV_R0_A, VACC);
+			writeREG_Rx(mcode, VACC);
 			break;
 		case ASM_MOV_XR1_A://F7
 		case ASM_MOV_XR0_A://F6
-			writeByteIDATA(readREG_Rx(mcode - ASM_MOV_XR0_A), VACC);
+			writeByteIDATA(readREG_Rx(mcode), VACC);
 			break;
 		case ASM_MOV_DIRECT_A://F5
 			direct1 = readOne();
@@ -319,7 +319,7 @@ void run(long int addr,long int len)
 			break;
 		case ASM_MOVX_XR1_A://F3
 		case ASM_MOVX_XR0_A://F2
-			XDATA[readREG_Rx(mcode - ASM_MOVX_XR0_A)] = VACC;
+			XDATA[readREG_Rx(mcode)] = VACC;
 			break;
 		case ASM_MOVX_XDPTR_A://F0 X
 			uitemp = readByteDATA(REG_DPH) << 8;
@@ -334,11 +334,11 @@ void run(long int addr,long int len)
 		case ASM_MOV_A_R2://EA
 		case ASM_MOV_A_R1://E9
 		case ASM_MOV_A_R0://E8
-			VACC = readREG_Rx(mcode - ASM_MOV_A_R0);
+			VACC = readREG_Rx(mcode);
 			break;
 		case ASM_MOV_A_XR1://E7 X
 		case ASM_MOV_A_XR0://E6 X
-			VACC = readByteIDATA(readREG_Rx(mcode - ASM_MOV_A_XR0));
+			VACC = readByteIDATA(readREG_Rx(mcode));
 			break;
 		case ASM_MOV_A_DIRECT://E5
 			direct1 = readOne();
@@ -349,7 +349,7 @@ void run(long int addr,long int len)
 			break;
 		case ASM_MOVX_A_XR1://E3
 		case ASM_MOVX_A_XR0://E2
-			VACC = XDATA[readREG_Rx(mcode - ASM_MOVX_A_XR0)];
+			VACC = XDATA[readREG_Rx(mcode)];
 			break;
 		case ASM_MOVX_A_XDPTR://E0 X
 			uitemp = readByteDATA(REG_DPH) << 8;
@@ -364,18 +364,18 @@ void run(long int addr,long int len)
 		case ASM_DJNZ_R2_REL://DA
 		case ASM_DJNZ_R1_REL://D9
 		case ASM_DJNZ_R0_REL://D8
-			udat1 = readREG_Rx(mcode - ASM_DJNZ_R0_REL) - 1;
+			udat1 = readREG_Rx(mcode) - 1;
 			dat1 = readOne();
-			writeREG_Rx(mcode - ASM_DJNZ_R0_REL, udat1);
+			writeREG_Rx(mcode, udat1);
 			if (udat1 == 0)break;
 			PC += dat1;
 			break;
-		case ASM_XCHD_A_XR1://D7 X
-		case ASM_XCHD_A_XR0://D6 X
+		case ASM_XCHD_A_XR1://D7
+		case ASM_XCHD_A_XR0://D6
 			udat1 = VACC;
-			udat2 = readByteIDATA(readREG_Rx(mcode - ASM_XCHD_A_XR0));
+			udat2 = readByteIDATA(readREG_Rx(mcode));
 			VACC = (udat1 & 0xF0) + (udat2 & 0xF);
-			writeByteIDATA(readREG_Rx(mcode - ASM_XCHD_A_XR0), (udat2 & 0xF0) + (udat1 & 0xF));
+			writeByteIDATA(readREG_Rx(mcode), (udat2 & 0xF0) + (udat1 & 0xF));
 			break;
 		case ASM_DJNZ_DIRECT_REL://D5
 			direct1 = readOne();
@@ -422,25 +422,25 @@ void run(long int addr,long int len)
 			direct1 = readOne();
 			pop(direct1);
 			break;
-		case ASM_XCH_A_R7://CF X
-		case ASM_XCH_A_R6://CE X
-		case ASM_XCH_A_R5://CD X
-		case ASM_XCH_A_R4://CC X
-		case ASM_XCH_A_R3://CB X
-		case ASM_XCH_A_R2://CA X
-		case ASM_XCH_A_R1://C9 X
-		case ASM_XCH_A_R0://C8 X
+		case ASM_XCH_A_R7://CF
+		case ASM_XCH_A_R6://CE
+		case ASM_XCH_A_R5://CD
+		case ASM_XCH_A_R4://CC
+		case ASM_XCH_A_R3://CB
+		case ASM_XCH_A_R2://CA
+		case ASM_XCH_A_R1://C9
+		case ASM_XCH_A_R0://C8
 			udat1 = VACC;
-			VACC = readREG_Rx(mcode - ASM_XCH_A_R0);
-			writeREG_Rx(mcode - ASM_XCH_A_R0, udat1);
+			VACC = readREG_Rx(mcode);
+			writeREG_Rx(mcode, udat1);
 			break;
-		case ASM_XCH_A_XR1://C7 X
-		case ASM_XCH_A_XR0://C6 X
+		case ASM_XCH_A_XR1://C7
+		case ASM_XCH_A_XR0://C6
 			udat1 = VACC;
-			VACC = readByteIDATA(readREG_Rx(mcode - ASM_XCH_A_XR0));
-			writeByteIDATA(readREG_Rx(mcode - ASM_XCH_A_XR0), udat1);
+			VACC = readByteIDATA(readREG_Rx(mcode));
+			writeByteIDATA(readREG_Rx(mcode), udat1);
 			break;
-		case ASM_XCH_A_DIRECT://C5 X
+		case ASM_XCH_A_DIRECT://C5
 			udat1 = VACC;
 			direct1 = readOne();
 			VACC = readByteDATA(direct1);
@@ -480,12 +480,12 @@ void run(long int addr,long int len)
 		case ASM_MOV_R1_DIRECT://A9
 		case ASM_MOV_R0_DIRECT://A8
 			direct1 = readOne();
-			writeREG_Rx(mcode - ASM_MOV_R0_DIRECT, readByteDATA(direct1));
+			writeREG_Rx(mcode, readByteDATA(direct1));
 			break;
 		case ASM_MOV_XR1_DIRECT://A7 X
 		case ASM_MOV_XR0_DIRECT://A6 X
 			direct1 = readOne();
-			writeByteIDATA(readREG_Rx(mcode - ASM_MOV_XR0_DIRECT), readByteDATA(direct1));
+			writeByteIDATA(readREG_Rx(mcode), readByteDATA(direct1));
 			break;
 		case ASM_MUL_AB://A4 X
 			udat2 = readByteDATA(REG_B);
@@ -516,12 +516,12 @@ void run(long int addr,long int len)
 		case ASM_SUBB_A_R2://9A X
 		case ASM_SUBB_A_R1://99 X
 		case ASM_SUBB_A_R0://98 X
-			udat1 = readREG_Rx(mcode - ASM_SUBB_A_R0);
+			udat1 = readREG_Rx(mcode);
 			subFromACC(udat1, 1);
 			break;
 		case ASM_SUBB_A_XR1://97 X
 		case ASM_SUBB_A_XR0://96 X
-			direct1 = readREG_Rx(mcode - ASM_SUBB_A_XR0);
+			direct1 = readREG_Rx(mcode);
 			udat1 = readByteDATA(direct1);
 			subFromACC(udat1, 1);
 			break;
@@ -558,12 +558,12 @@ void run(long int addr,long int len)
 		case ASM_MOV_DIRECT_R1://89
 		case ASM_MOV_DIRECT_R0://88
 			direct1 = readOne();
-			writeByteDATA(direct1, readREG_Rx(mcode - ASM_MOV_DIRECT_R0));
+			writeByteDATA(direct1, readREG_Rx(mcode));
 			break;
 		case ASM_MOV_DIRECT_XR1://87 X
 		case ASM_MOV_DIRECT_XR0://86 X
 			direct1 = readOne();
-			udat1 = readByteIDATA(readREG_Rx(mcode - ASM_MOV_DIRECT_XR0));
+			udat1 = readByteIDATA(readREG_Rx(mcode));
 			writeByteDATA(direct1, udat1);
 			break;
 		case ASM_MOV_DIRECT_DIRECT://85
@@ -587,14 +587,14 @@ void run(long int addr,long int len)
 		case ASM_CJNE_R0_DATA_REL://88 X
 			udat1 = readOne();
 			dat1 = readOne();
-			if (readREG_Rx(mcode - ASM_CJNE_R0_DATA_REL) == udat1)break;
+			if (readREG_Rx(mcode) == udat1)break;
 			PC += dat1;
 			break;
 		case ASM_CJNE_XR1_DATA_REL://87 X
 		case ASM_CJNE_XR0_DATA_REL://86 X
 			udat1 = readOne();
 			dat1 = readOne();
-			if (readByteIDATA(readREG_Rx(mcode - ASM_CJNE_XR0_DATA_REL)) == udat1)break;
+			if (readByteIDATA(readREG_Rx(mcode)) == udat1)break;
 			PC += dat1;
 			break;
 		case ASM_CJNE_A_DIRECT_REL://85 X
@@ -630,12 +630,12 @@ void run(long int addr,long int len)
 		case ASM_MOV_R1_DATA://79
 		case ASM_MOV_R0_DATA://78
 			udat1 = readOne();
-			writeREG_Rx(mcode - ASM_MOV_R0_DATA, udat1);
+			writeREG_Rx(mcode, udat1);
 			break;
-		case ASM_MOV_XR1_DATA://77 X
-		case ASM_MOV_XR0_DATA://76 X
+		case ASM_MOV_XR1_DATA://77
+		case ASM_MOV_XR0_DATA://76
 			udat1 = readOne();
-			writeByteIDATA(readREG_Rx(mcode - ASM_MOV_XR0_DATA), udat1);
+			writeByteIDATA(readREG_Rx(mcode), udat1);
 			break;
 		case ASM_MOV_DIRECT_DATA://75
 			direct1 = readOne();
@@ -663,12 +663,12 @@ void run(long int addr,long int len)
 		case ASM_XRL_A_R2://6A X
 		case ASM_XRL_A_R1://69 X
 		case ASM_XRL_A_R0://68 X
-			udat1 = readREG_Rx(mcode - ASM_XRL_A_R0);
+			udat1 = readREG_Rx(mcode);
 			VACC = udat1 ^ VACC;
 			break;
 		case ASM_XRL_A_XR1://67 X
 		case ASM_XRL_A_XR0://66 X
-			direct1 = readREG_Rx(mcode - ASM_XRL_A_XR0);
+			direct1 = readREG_Rx(mcode);
 			udat1 = readByteDATA(direct1);
 			VACC ^= udat1;
 			break;
@@ -705,12 +705,12 @@ void run(long int addr,long int len)
 		case ASM_ANL_A_R2://5A X
 		case ASM_ANL_A_R1://59 X
 		case ASM_ANL_A_R0://58 X
-			udat1 = readREG_Rx(mcode - ASM_ANL_A_R0);
+			udat1 = readREG_Rx(mcode);
 			VACC &= udat1;
 			break;
 		case ASM_ANL_A_XR1://57 X
 		case ASM_ANL_A_XR0://56 X
-			direct1 = readREG_Rx(mcode - ASM_ANL_A_XR0);
+			direct1 = readREG_Rx(mcode);
 			udat1 = readByteDATA(direct1);
 			VACC &= udat1;
 			break;
@@ -742,12 +742,12 @@ void run(long int addr,long int len)
 		case ASM_ORL_A_R2://4A X
 		case ASM_ORL_A_R1://49 X
 		case ASM_ORL_A_R0://48 X
-			udat1 = readREG_Rx(mcode - ASM_ORL_A_R0);
+			udat1 = readREG_Rx(mcode);
 			VACC |= udat1;
 			break;
 		case ASM_ORL_A_XR1://47 X
 		case ASM_ORL_A_XR0://46 X
-			direct1 = readREG_Rx(mcode - ASM_ORL_A_XR0);
+			direct1 = readREG_Rx(mcode);
 			udat1 = readByteDATA(direct1);
 			VACC |= udat1;
 			break;
@@ -766,6 +766,11 @@ void run(long int addr,long int len)
 			udat2 = readOne();
 			writeByteDATA(direct1, udat1 | udat2);
 			break;
+		case ASM_ORL_DIRECT_A://42
+			direct1 = readOne();
+			udat1 = readByteDATA(direct1);
+			writeByteDATA(direct1, udat1 | VACC);
+			break;
 		case ASM_JC_REL://40
 			dat1 = readOne();
 			if (!(VPSW & 0x80)) break;
@@ -779,12 +784,12 @@ void run(long int addr,long int len)
 		case ASM_ADDC_A_R2://3A X
 		case ASM_ADDC_A_R1://39 X
 		case ASM_ADDC_A_R0://38 X
-			udat1 = readREG_Rx(mcode - ASM_ADDC_A_R0);
+			udat1 = readREG_Rx(mcode);
 			addToACC(udat1, 1);
 			break;
 		case ASM_ADDC_A_XR1://37 X
 		case ASM_ADDC_A_XR0://36 X
-			direct1 = readREG_Rx(mcode - ASM_ADDC_A_XR0);
+			direct1 = readREG_Rx(mcode);
 			udat1 = readByteDATA(direct1);
 			addToACC(udat1, 1);
 			break;
@@ -824,12 +829,12 @@ void run(long int addr,long int len)
 		case ASM_ADD_A_R2://2A X
 		case ASM_ADD_A_R1://29 X
 		case ASM_ADD_A_R0://28 X
-			udat1 = readREG_Rx(mcode - ASM_ADD_A_R0);
+			udat1 = readREG_Rx(mcode);
 			addToACC(udat1, 0);
 			break;
 		case ASM_ADD_A_XR1://27 X
 		case ASM_ADD_A_XR0://26 X
-			direct1 = readREG_Rx(mcode - ASM_ADD_A_XR0);
+			direct1 = readREG_Rx(mcode);
 			udat1 = readByteDATA(direct1);
 			addToACC(udat1, 0);
 			break;
@@ -867,12 +872,12 @@ void run(long int addr,long int len)
 		case ASM_DEC_R2://1A X
 		case ASM_DEC_R1://19 X
 		case ASM_DEC_R0://18 X
-			udat1 = readREG_Rx(mcode - ASM_DEC_R0);
-			writeREG_Rx(mcode - ASM_DEC_R0, udat1 - 1);
+			udat1 = readREG_Rx(mcode);
+			writeREG_Rx(mcode, udat1 - 1);
 			break;
 		case ASM_DEC_XR1://17 X
 		case ASM_DEC_XR0://16 X
-			direct1 = readREG_Rx(mcode - ASM_DEC_XR0);
+			direct1 = readREG_Rx(mcode);
 			udat1 = readByteIDATA(direct1);
 			writeByteIDATA(direct1, udat1 - 1);
 			break;
@@ -914,12 +919,12 @@ void run(long int addr,long int len)
 		case ASM_INC_R2://0A X
 		case ASM_INC_R1://09 X
 		case ASM_INC_R0://08 X
-			udat1 = readREG_Rx(mcode - ASM_INC_R0);
-			writeREG_Rx(mcode - ASM_INC_R0, udat1 + 1);
+			udat1 = readREG_Rx(mcode);
+			writeREG_Rx(mcode, udat1 + 1);
 			break;
 		case ASM_INC_XR1://07 X
 		case ASM_INC_XR0://06 X
-			direct1 = readREG_Rx(mcode - ASM_INC_XR0);
+			direct1 = readREG_Rx(mcode);
 			udat1 = readByteIDATA(direct1);
 			writeByteIDATA(direct1, udat1 + 1);
 			break;
